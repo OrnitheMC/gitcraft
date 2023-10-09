@@ -11,6 +11,10 @@ repositories {
 	maven {
 		url = "https://maven.quiltmc.org/repository/release"
 	}
+	maven {
+		name = 'Ornithe'
+		url = 'https://maven.ornithemc.net/releases'
+	}
 	mavenCentral()
 }
 
@@ -56,6 +60,9 @@ dependencies {
 
 	// Decompiler, could be replaced with another fernflower fork
 	implementation "org.vineflower:vineflower:${vineflower_version}"
+
+	implementation "net.ornithemc:nester:${nester_version}"
+	implementation "net.ornithemc:mapping-utils:${mapping_utils_version}"
 }
 
 // if not working: run ./gradlew run --refresh-dependencies

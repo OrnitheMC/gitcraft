@@ -7,6 +7,7 @@ import com.github.winplay02.meta.ArtifactMeta;
 import com.github.winplay02.meta.AssetsIndexMeta;
 import com.github.winplay02.meta.LauncherMeta;
 import com.github.winplay02.meta.LibraryMeta;
+import com.github.winplay02.meta.VersionDetails;
 import com.github.winplay02.meta.VersionMeta;
 import dex.mcgitmaker.GitCraft;
 import groovy.lang.Tuple2;
@@ -56,10 +57,10 @@ public class McMetadata {
 		// Add unknown versions
 		for (LauncherMeta.LauncherVersionEntry version : mcLauncherVersions.versions()) {
 			if (!versionMeta.containsKey(version.id())) {
-				versionMeta.put(version.id(), createVersionDataFromLauncherMeta(version.id(), version.url(), version.sha1()));
+				versionMeta.put(version.id(), createVersionDataFromLauncherMeta(version.id(), version.url(), version.sha1(), version.details()));
 			} else {
 				if (!ensureVersionMetaPresence(version.id(), version.url(), version.sha1())) {
-					versionMeta.put(version.id(), createVersionDataFromLauncherMeta(version.id(), version.url(), version.sha1()));
+					versionMeta.put(version.id(), createVersionDataFromLauncherMeta(version.id(), version.url(), version.sha1(), version.details()));
 				}
 			}
 		}
@@ -86,7 +87,7 @@ public class McMetadata {
 		if (dataVersions.containsKey(meta.id())) {
 			return null;
 		}
-		return createVersionData(meta, pExtraFile, null);
+		return createVersionData(meta, pExtraFile, null, new VersionDetails(meta.id(), new String[0]));
 	}
 
 	private static boolean ensureVersionMetaPresence(String metaID, String metaURL, String metaSha1) {
@@ -105,14 +106,17 @@ public class McMetadata {
 		return upToDate;
 	}
 
-	private static McVersion createVersionDataFromLauncherMeta(String metaID, String metaURL, String metaSha1) throws IOException {
+	private static McVersion createVersionDataFromLauncherMeta(String metaID, String metaURL, String metaSha1, String detailsURL) throws IOException {
 		Path metaFile = GitCraft.META_CACHE.resolve(metaID + ".json");
+		Path detailsFile = GitCraft.META_CACHE.resolve(metaID + "-details.json");
 		RemoteHelper.downloadToFileWithChecksumIfNotExists(metaURL, metaFile, metaSha1, "version meta", metaID);
+		RemoteHelper.downloadToFile(detailsURL, detailsFile);
 		VersionMeta meta = SerializationHelper.deserialize(SerializationHelper.fetchAllFromPath(metaFile), VersionMeta.class);
-		return createVersionData(meta, metaFile, metaSha1);
+		VersionDetails details = SerializationHelper.deserialize(SerializationHelper.fetchAllFromPath(detailsFile), VersionDetails.class);
+		return createVersionData(meta, metaFile, metaSha1, details);
 	}
 
-	private static McVersion createVersionData(VersionMeta meta, Path sourcePath, String metaSha1) throws IOException {
+	private static McVersion createVersionData(VersionMeta meta, Path sourcePath, String metaSha1, VersionDetails details) throws IOException {
 		Set<Artifact> libs = new HashSet<>();
 		// Ignores natives, not needed as we don't have a runtime
 		for (LibraryMeta library : meta.libraries()) {
@@ -132,7 +136,7 @@ public class McMetadata {
 			throw new RuntimeException("A valid stored version meta for %s does not exist".formatted(meta.id()));
 		}
 
-		return new McVersion(meta.id(), null, Objects.equals(meta.type(), "snapshot") || Objects.equals(meta.type(), "pending"), artifacts.hasMappings(), javaVersion, artifacts, libs, meta.mainClass(), null, meta.time(), meta.assets());
+		return new McVersion(meta.id(), details.normalizedVersion(), null, details.previous().length == 0 ? null : details.previous()[0], Objects.equals(meta.type(), "snapshot") || Objects.equals(meta.type(), "pending"), artifacts.hasMappings(), javaVersion, artifacts, libs, meta.mainClass(), null, meta.time(), meta.assets());
 	}
 
 	private static AssetsIndexMeta fetchAssetsIndex(String assetsId, String url, String sha1Hash) throws IOException {
@@ -185,16 +189,16 @@ public class McMetadata {
 	}
 
 	private static McArtifacts getMcArtifacts(VersionMeta meta) {
-		Tuple2<Path, String> client = getMcArtifactData(meta.id(), meta.downloads().client().url());
+		Tuple2<Path, String> client = getMcJarArtifactData(meta.id(), "client", meta.downloads().client() != null ? meta.downloads().client().url() : "");
 		String cmUrl = meta.downloads().client_mappings() != null ? meta.downloads().client_mappings().url() : "";
 		String cmSha1 = meta.downloads().client_mappings() != null ? meta.downloads().client_mappings().sha1() : null;
 		String smUrl = meta.downloads().server_mappings() != null ? meta.downloads().server_mappings().url() : "";
 		String smSha1 = meta.downloads().server_mappings() != null ? meta.downloads().server_mappings().sha1() : null;
 		Tuple2<Path, String> client_mapping = getMcArtifactData(meta.id(), cmUrl);
-		Tuple2<Path, String> server = getMcArtifactData(meta.id(), meta.downloads().server() != null ? meta.downloads().server().url() : "");
+		Tuple2<Path, String> server = getMcJarArtifactData(meta.id(), "server", meta.downloads().server() != null ? meta.downloads().server().url() : "");
 		Tuple2<Path, String> server_mapping = getMcArtifactData(meta.id(), smUrl);
 
-		Artifact clientArtifact = new Artifact(meta.downloads().client().url(), client.getV2(), client.getV1(), meta.downloads().client().sha1());
+		Artifact clientArtifact = new Artifact(meta.downloads().client() != null ? meta.downloads().client().url() : "", client.getV2(), client.getV1(), meta.downloads().client() != null ? meta.downloads().client().sha1() : "");
 		Artifact clientMappingArtifact = new Artifact(cmUrl, client_mapping.getV2(), client_mapping.getV1(), cmSha1);
 		Artifact serverArtifact = new Artifact(meta.downloads().server() != null ? meta.downloads().server().url() : "", server.getV2(), server.getV1(), meta.downloads().server() != null ? meta.downloads().server().sha1() : "");
 		Artifact serverMappingArtifact = new Artifact(smUrl, server_mapping.getV2(), server_mapping.getV1(), smSha1);
@@ -206,5 +210,10 @@ public class McMetadata {
 	// containing path, file name
 	private static Tuple2<Path, String> getMcArtifactData(String version, String url) {
 		return new Tuple2<>(getMcArtifactRootPath(version), Artifact.nameFromUrl(url));
+	}
+
+	// cannot use above method because the artifact names for server and client might end up identical
+	private static Tuple2<Path, String> getMcJarArtifactData(String version, String side, String url) {
+		return new Tuple2<>(getMcArtifactRootPath(version), String.format("%s-%s.jar", version, side));
 	}
 }

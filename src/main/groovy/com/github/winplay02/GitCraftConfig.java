@@ -26,7 +26,7 @@ public class GitCraftConfig {
 	public int failedFetchRetryInterval = 500;
 	public int remappingThreads = Runtime.getRuntime().availableProcessors() - 3;
 	public int decompilingThreads = Runtime.getRuntime().availableProcessors() - 3;
-	public MappingHelper.MappingFlavour usedMapping = MappingHelper.MappingFlavour.MOJMAP;
+	public MappingHelper.MappingFlavour usedMapping = MappingHelper.MappingFlavour.FEATHER;
 	public MappingHelper.MappingFlavour[] fallbackMappings = null;
 	public boolean onlyStableReleases = false;
 	public boolean onlySnapshots = false;
@@ -48,14 +48,14 @@ public class GitCraftConfig {
 	/// Mapping Settings
 	public static final String MIN_SUPPORTED_FABRIC_LOADER = "0.14.23";
 
-	public static final SemanticVersion INTERMEDIARY_MAPPINGS_START_VERSION, YARN_MAPPINGS_START_VERSION, YARN_CORRECTLY_ORIENTATED_MAPPINGS_VERSION, PARCHMENT_START_VERSION;
+	public static final SemanticVersion CALAMUS_MAPPINGS_START_VERSION, CALAMUS_MAPPINGS_END_VERSION, FEATHER_MAPPINGS_START_VERSION, FEATHER_MAPPINGS_END_VERSION;
 
 	static {
 		try {
-			INTERMEDIARY_MAPPINGS_START_VERSION = SemanticVersion.parse("1.14-alpha.18.43.b");
-			YARN_MAPPINGS_START_VERSION = SemanticVersion.parse("1.14-alpha.18.49.a");
-			YARN_CORRECTLY_ORIENTATED_MAPPINGS_VERSION = SemanticVersion.parse("1.14.3");
-			PARCHMENT_START_VERSION = SemanticVersion.parse("1.16.5");
+			CALAMUS_MAPPINGS_START_VERSION = SemanticVersion.parse("1.3.0-pre+07261249");
+			CALAMUS_MAPPINGS_END_VERSION = SemanticVersion.parse("1.13.2");
+			FEATHER_MAPPINGS_START_VERSION = SemanticVersion.parse("1.3.0-pre+07261249");
+			FEATHER_MAPPINGS_END_VERSION = SemanticVersion.parse("1.13.2");
 		} catch (VersionParsingException e) {
 			throw new RuntimeException(e);
 		}

@@ -28,7 +28,7 @@ class GitCraftCli {
 			'no-repo', 'Prevents the creation/modification of a repository for versioning, only decompiles the provided (or all) version(s)');
 		cli_args._(longOpt:
 			'refresh', 'Refreshes the decompilation by deleting old decompiled artifacts and restarting. This will not be useful, if the decompiler has not been updated. The repository has to be deleted manually.');
-		cli_args._(longOpt: 'mappings', "Specifies the mappings used to decompile the source tree. Mojmaps are selected by default. Possible values are: ${Arrays.stream(MappingHelper.MappingFlavour.values()).map(Object::toString).collect(Collectors.joining(", "))}", type: MappingHelper.MappingFlavour, argName: "mapping", defaultValue: "mojmap");
+		cli_args._(longOpt: 'mappings', "Specifies the mappings used to decompile the source tree. Mojmaps are selected by default. Possible values are: ${Arrays.stream(MappingHelper.MappingFlavour.values()).map(Object::toString).collect(Collectors.joining(", "))}", type: MappingHelper.MappingFlavour, argName: "mapping", defaultValue: "feather");
 		cli_args._(longOpt: 'fallback-mappings', args: -2 /*CliBuilder.COMMONS_CLI_UNLIMITED_VALUES*/, valueSeparator: ',', argName: "mapping", "If the primary mapping fails, these mappings are tried (in given order). By default none is tried as a fallback. Possible values are: ${Arrays.stream(MappingHelper.MappingFlavour.values()).map(Object::toString).collect(Collectors.joining(", "))}", type: MappingHelper.MappingFlavour[]);
 		cli_args._(longOpt: 'only-stable', 'Only decompiles stable releases.');
 		cli_args._(longOpt: 'only-snapshot', 'Only decompiles snapshots (includes pending and non-linear, if not otherwise specified).');

@@ -8,18 +8,25 @@ import dex.mcgitmaker.loom.Decompiler;
 import net.fabricmc.stitch.merge.JarMerger;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Objects;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
+import java.util.jar.JarOutputStream;
 
 public class McVersion {
 
-	public McVersion(String version, String loaderVersion, boolean snapshot, boolean hasMappings, int javaVersion, McArtifacts artifacts, Collection<Artifact> libraries, String mainClass, String mergedJar, String time, String assets_index) {
+	public McVersion(String version, String normalizedVersion, String loaderVersion, String previousVersion, boolean snapshot, boolean hasMappings, int javaVersion, McArtifacts artifacts, Collection<Artifact> libraries, String mainClass, String mergedJar, String time, String assets_index) {
 		this.version = version;
+		this.normalizedVersion = normalizedVersion;
 		this.loaderVersion = loaderVersion;
+		this.previousVersion = previousVersion;
 		this.snapshot = snapshot;
 		this.hasMappings = hasMappings;
 		this.javaVersion = javaVersion;
@@ -32,7 +39,9 @@ public class McVersion {
 	}
 
 	public String version; // MC version string from launcher
+	public String normalizedVersion; // normalized MC version string from details json
 	public String loaderVersion; // Version from Fabric loader
+	public String previousVersion; // previous MC version in the graph
 	public boolean snapshot; // If the version is a release
 	public boolean hasMappings; // If the version has mappings provided
 	public int javaVersion = 8;
@@ -93,9 +102,35 @@ public class McVersion {
 			server2merge = minecraftExtractedServerJar.toFile();
 		}
 
-		try (JarMerger jarMerger = new JarMerger(client, server2merge, mergedJarPath().toFile())) {
+		Path temp = mergedJarPath().resolveSibling("merged-unfiltered.jar");
+
+		try (JarMerger jarMerger = new JarMerger(client, server2merge, temp.toFile())) {
 			jarMerger.enableSyntheticParamsOffset();
 			jarMerger.merge();
+		}
+
+		try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(mergedJarPath().toFile()))) {
+			byte[] buffer = new byte[4096];
+			int read = 0;
+
+			try (JarInputStream jis = new JarInputStream(new FileInputStream(temp.toFile()))) {
+				for (JarEntry entry; (entry = jis.getNextJarEntry()) != null; ) {
+					String name = entry.getName();
+
+					// always copy non-class files
+					// copy classes if in root package, or in net/minecraft/ or in com/mojang/
+					if (!name.endsWith(".class") || name.indexOf('/') < 0 || name.startsWith("net/minecraft/") || name.startsWith("com/mojang/")) {
+						jos.putNextEntry(new JarEntry(name));
+
+						while ((read = jis.read(buffer)) > 0) {
+							jos.write(buffer, 0, read);
+						}
+
+						jos.flush();
+						jos.closeEntry();
+					}
+				}
+			}
 		}
 
 		mergedJar = mergedJarPath().toString();
@@ -110,11 +145,11 @@ public class McVersion {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		McVersion mcVersion = (McVersion) o;
-		return snapshot == mcVersion.snapshot && hasMappings == mcVersion.hasMappings && javaVersion == mcVersion.javaVersion && Objects.equals(version, mcVersion.version) && Objects.equals(loaderVersion, mcVersion.loaderVersion) && Objects.equals(artifacts, mcVersion.artifacts) && Objects.equals(libraries, mcVersion.libraries) && Objects.equals(mainClass, mcVersion.mainClass) && Objects.equals(time, mcVersion.time) && Objects.equals(assets_index, mcVersion.assets_index);
+		return snapshot == mcVersion.snapshot && hasMappings == mcVersion.hasMappings && javaVersion == mcVersion.javaVersion && Objects.equals(version, mcVersion.version) && Objects.equals(normalizedVersion, mcVersion.normalizedVersion) && Objects.equals(loaderVersion, mcVersion.loaderVersion) && Objects.equals(artifacts, mcVersion.artifacts) && Objects.equals(libraries, mcVersion.libraries) && Objects.equals(mainClass, mcVersion.mainClass) && Objects.equals(time, mcVersion.time) && Objects.equals(assets_index, mcVersion.assets_index);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(version, loaderVersion, snapshot, hasMappings, javaVersion, artifacts, libraries, mainClass, time, assets_index);
+		return Objects.hash(version, normalizedVersion, loaderVersion, previousVersion, snapshot, hasMappings, javaVersion, artifacts, libraries, mainClass, time, assets_index);
 	}
 }

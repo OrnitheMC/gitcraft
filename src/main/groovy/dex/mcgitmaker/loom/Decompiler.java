@@ -9,6 +9,8 @@ import dex.mcgitmaker.data.Artifact;
 import dex.mcgitmaker.data.McVersion;
 import net.fabricmc.fernflower.api.IFabricJavadocProvider;
 import net.fabricmc.loom.decompilers.vineflower.TinyJavadocProvider;
+import net.ornithemc.Nester;
+
 import org.jetbrains.java.decompiler.main.Fernflower;
 import org.jetbrains.java.decompiler.main.decompiler.PrintStreamLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
@@ -74,6 +76,7 @@ public class Decompiler {
 		}
 
 		Path mc_file = Remapper.doRemap(mcVersion, mappingFlavour);
+		mc_file = Nester.doNest(mcVersion, mappingFlavour);
 		openFileSystems.add(FileSystemUtil.getJarFileSystem(mc_file, false));
 		ff.addSource(mc_file.toFile());
 

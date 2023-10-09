@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -39,12 +40,12 @@ public class MinecraftVersionGraph implements Iterable<McVersion> {
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
 				MiscHelper.panic("Duplicate keys in tree map");
 				return null;
-			}, TreeMap::new));
+			}, () -> new TreeMap<>(VERSION_COMPARATOR)));
 		this.nonLinearVersions = previous.nonLinearVersions.entrySet().stream().filter(predicate)
 			.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> {
 				MiscHelper.panic("Duplicate keys in tree map");
 				return null;
-			}, TreeMap::new));
+			}, () -> new TreeMap<>(VERSION_COMPARATOR)));
 		this.repoTags.addAll(Arrays.asList(tags));
 		reconnectGraph(previous);
 	}
@@ -70,7 +71,7 @@ public class MinecraftVersionGraph implements Iterable<McVersion> {
 		McVersion root = this.getRootVersion();
 		for (McVersion version : this) {
 			if (this.getPreviousNode(version).isEmpty() && !version.equals(root)) {
-				MiscHelper.panic("Version %s is not connected any other version in the graph", version.version);
+				MiscHelper.panic("Version %s (%s) is not connected any other version in the graph", version.version, version.loaderVersion);
 				return false;
 			}
 		}
@@ -80,7 +81,7 @@ public class MinecraftVersionGraph implements Iterable<McVersion> {
 	protected static final Pattern LINEAR_SNAPSHOT_REGEX = Pattern.compile("(^\\d\\dw\\d\\d[a-z]$)|(^\\d.\\d+(.\\d+)?(-(pre|rc)\\d+|_[a-z_\\-]+snapshot-\\d+| Pre-Release \\d+)?$)");
 
 	public static boolean isVersionNonLinearSnapshot(McVersion mcVersion) {
-		return mcVersion.snapshot && (Objects.equals(mcVersion.version, "15w14a") || !(LINEAR_SNAPSHOT_REGEX.matcher(mcVersion.version).matches())); // mark 15w14a explicit as april fools snapshot, since this case should not be covered by the regex
+		return mcVersion.snapshot && (Objects.equals(mcVersion.version, "15w14a") || (mcVersion.previousVersion == null && !LINEAR_SNAPSHOT_REGEX.matcher(mcVersion.version).matches())); // mark 15w14a explicit as april fools snapshot, since this case should not be covered by the regex
 	}
 
 	public static String fixupSemver(String proposedSemVer) {
@@ -140,6 +141,16 @@ public class MinecraftVersionGraph implements Iterable<McVersion> {
 	}
 
 	public static void lookupLoaderVersion(McVersion mcVersion) {
+		// retrieve semver version from details instead of loader
+		if (mcVersion.loaderVersion == null) {
+			if (mcVersion.normalizedVersion == null) {
+				MiscHelper.println("no normalized version present in details for %s", mcVersion.version);
+			} else {
+				mcVersion.loaderVersion = mcVersion.normalizedVersion;
+				MiscHelper.println("Semver found for: %s as %s", mcVersion.version, mcVersion.loaderVersion);
+			}
+			return;
+		}
 		// FIX until fabric-loader is updated
 		{
 			if (GitCraftConfig.minecraftVersionSemVerOverride.containsKey(mcVersion.version)) {
@@ -224,11 +235,107 @@ public class MinecraftVersionGraph implements Iterable<McVersion> {
 			case "1.16.3-combat.8.c" -> {
 				return "1.16.3-combat.8.b";
 			}
+			case "1.0.0-rc.2+1" -> {
+				return "1.0.0-rc.1";
+			}
+			case "1.2.0-alpha.12.5.a+1354" -> {
+				return "1.2.0-alpha.12.4.a";
+			}
+			case "1.3.0-pre+07261249" -> {
+				return "1.3.0-alpha.12.30.e";
+			}
+			case "1.4.0-pre" -> {
+				return "1.4.0-alpha.12.42.b";
+			}
+			case "1.4.1-pre+10231538" -> {
+				return "1.4.0-pre";
+			}
+			case "1.4.3-pre" -> {
+				return "1.4.2";
+			}
+			case "1.5.0-alpha.13.3.a+1538" -> {
+				return "1.5.0-alpha.13.2.b";
+			}
+			case "1.5.0-alpha.13.5.a+1504" -> {
+				return "1.5.0-alpha.13.4.a";
+			}
+			case "1.5.0-alpha.13.5.a+1538" -> {
+				return "1.5.0-alpha.13.5.a+1504";
+			}
+			case "1.5.0-alpha.13.6.a+1559" -> {
+				return "1.5.0-alpha.13.5.b";
+			}
+			case "1.5.0-alpha.13.6.a+1636" -> {
+				return "1.5.0-alpha.13.6.a+1559";
+			}
+			case "1.5.1-alpha.13.12.a" -> {
+				return "1.5.1-alpha.13.11.a";
+			}
+			case "1.6.0-alpha.13.16.a+04192037" -> {
+				return "1.5.2";
+			}
+			case "1.6.0-alpha.13.16.b+04232151" -> {
+				return "1.6.0-alpha.13.16.a+04192037";
+			}
+			case "1.6.0-alpha.13.23.b+06080101" -> {
+				return "1.6.0-alpha.13.23.a";
+			}
+			case "1.6.0-pre+06251516" -> {
+				return "1.6.0-alpha.13.26.a";
+			}
+			case "1.6.2+091847" -> {
+				return "1.6.1";
+			}
+			case "1.6.3-pre+171231" -> {
+				return "1.6.2+091847";
+			}
+			case "1.7.0-alpha.13.36.a+09051446" -> {
+				return "1.6.4";
+			}
+			case "1.7.0-alpha.13.36.b+09061310" -> {
+				return "1.7.0-alpha.13.36.a+09051446";
+			}
+			case "1.7.0-alpha.13.41.b+1523" -> {
+				return "1.7.0-alpha.13.41.a";
+			}
+			case "1.7.0-pre" -> {
+				return "1.7.0-alpha.13.43.a";
+			}
+			case "1.7.1-pre" -> {
+				return "1.7.0-pre";
+			}
+			case "1.7.3-pre" -> {
+				return "1.7.3-alpha.13.49.a";
+			}
+			case "1.8.0-alpha.14.4.b+1554" -> {
+				return "1.8.0-alpha.14.3.b";
+			}
+			case "1.8.0-alpha.14.27.b+07021646" -> {
+				return "1.8.0-alpha.14.27.a";
+			}
+			case "1.8.0-alpha.14.34.c+08191549" -> {
+				return "1.8.0-alpha.14.34.b";
+			}
+			case "1.11.1-alpha.16.50.a+1438" -> {
+				return "1.11.0";
+			}
+			case "1.12.0-pre.3+1316" -> {
+				return "1.12.0-pre.2";
+			}
+			case "1.12.0-pre.3+1409" -> {
+				return "1.12.0-pre.3+1316";
+			}
 			// April
 			case "1.8.4-alpha.15.14.a+loveandhugs" -> {
 				return "1.8.3";
 			}
+			case "1.8.4-april.fools" -> {
+				return "1.8.3";
+			}
 			case "1.9.2-rv+trendy" -> {
+				return "1.9.2";
+			}
+			case "1.9.3-april.fools" -> {
 				return "1.9.2";
 			}
 			case "1.14-alpha.19.13.shareware" -> {
@@ -252,9 +359,20 @@ public class MinecraftVersionGraph implements Iterable<McVersion> {
 		}
 	}
 
+	// fixes issues where SemanticVersionImpl doesn't take the build key into account in its compareTo method
+	private static final Comparator<SemanticVersion> VERSION_COMPARATOR = (v1, v2) -> {
+		int c = v1.compareTo((Version) v2);
+		if (c == 0) {
+			String b1 = v1.getBuildKey().orElse("");
+			String b2 = v2.getBuildKey().orElse("");
+			return b1.compareTo(b2);
+		}
+		return c;
+	};
+
 	public HashSet<String> repoTags = new HashSet<>();
-	public TreeMap<SemanticVersion, McVersion> versions = new TreeMap<>();
-	public TreeMap<SemanticVersion, McVersion> nonLinearVersions = new TreeMap<>();
+	public TreeMap<SemanticVersion, McVersion> versions = new TreeMap<>(VERSION_COMPARATOR);
+	public TreeMap<SemanticVersion, McVersion> nonLinearVersions = new TreeMap<>(VERSION_COMPARATOR);
 	public HashMap<McVersion, McVersion> overriddenEdges = new HashMap<>();
 
 	protected static SemanticVersion parseFromLoaderVersion(String loaderVersion) {
@@ -332,6 +450,9 @@ public class MinecraftVersionGraph implements Iterable<McVersion> {
 		if (overriddenEdges.containsKey(version)) {
 			return Optional.of(overriddenEdges.get(version));
 		}
+		//if (version.previousVersion != null) {
+		//	return Optional.ofNullable(getMinecraftVersionByName(version.previousVersion));
+		//}
 		if (!isVersionNonLinearSnapshot(version)) {
 			return Optional.ofNullable(versions.lowerEntry(parseFromLoaderVersion(version.loaderVersion))).map(Map.Entry::getValue);
 		}

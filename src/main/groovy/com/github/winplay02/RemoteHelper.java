@@ -28,7 +28,7 @@ import java.util.LinkedHashMap;
 
 public class RemoteHelper {
 
-	public static final String MINECRAFT_MAIN_META_URL = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json";
+	public static final String MINECRAFT_MAIN_META_URL = "https://skyrising.github.io/mc-versions/version_manifest.json";
 
 	public static String makeAssetUrl(String hash) {
 		return String.format("https://resources.download.minecraft.net/%s/%s", hash.substring(0, 2), hash);

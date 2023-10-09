@@ -1,6 +1,6 @@
 package com.github.winplay02;
 
-import com.github.winplay02.meta.FabricYarnVersionMeta;
+import com.github.winplay02.meta.OrnitheFeatherVersionMeta;
 import dex.mcgitmaker.GitCraft;
 import dex.mcgitmaker.data.McVersion;
 import dex.mcgitmaker.loom.FileSystemUtil;
@@ -8,25 +8,19 @@ import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
-import net.fabricmc.loom.configuration.providers.mappings.parchment.ParchmentTreeV1;
 import net.fabricmc.mappingio.MappingReader;
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.adapter.MappingDstNsReorder;
 import net.fabricmc.mappingio.adapter.MappingNsCompleter;
-import net.fabricmc.mappingio.adapter.MappingNsRenamer;
 import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.format.MappingFormat;
-import net.fabricmc.mappingio.format.ProGuardReader;
 import net.fabricmc.mappingio.tree.MappingTree;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import net.fabricmc.tinyremapper.IMappingProvider;
 import net.fabricmc.tinyremapper.TinyUtils;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.Reader;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -43,7 +37,7 @@ import java.util.stream.Collectors;
 public class MappingHelper {
 
 	public enum MappingFlavour {
-		MOJMAP, FABRIC_INTERMEDIARY, YARN, MOJMAP_PARCHMENT;
+		/*MOJMAP, FABRIC_INTERMEDIARY, YARN, MOJMAP_PARCHMENT, */CALAMUS, FEATHER;
 
 		@Override
 		public String toString() {
@@ -52,8 +46,8 @@ public class MappingHelper {
 
 		public boolean supportsComments() {
 			return switch (this) {
-				case MOJMAP_PARCHMENT -> true;
-				case MOJMAP, YARN, FABRIC_INTERMEDIARY -> false;
+				/*case MOJMAP_PARCHMENT -> true;*/
+				case /*MOJMAP, YARN, FABRIC_INTERMEDIARY, */CALAMUS, FEATHER -> false;
 			};
 		}
 
@@ -63,22 +57,14 @@ public class MappingHelper {
 
 		public String getDestinationNS() {
 			return switch (this) {
-				case MOJMAP, YARN, MOJMAP_PARCHMENT -> MappingsNamespace.NAMED.toString();
-				case FABRIC_INTERMEDIARY -> MappingsNamespace.INTERMEDIARY.toString();
+				case /*MOJMAP, YARN, MOJMAP_PARCHMENT, */FEATHER -> MappingsNamespace.NAMED.toString();
+				case /*FABRIC_INTERMEDIARY, */CALAMUS -> MappingsNamespace.INTERMEDIARY.toString();
 			};
-		}
-
-		private boolean isYarnBrokenVersion(McVersion mcVersion) {
-			return GitCraftConfig.yarnBrokenVersions.contains(mcVersion.version)
-				/* not really broken, but does not exist: */
-				|| GitCraftConfig.yarnMissingVersions.contains(mcVersion.version)
-				/* not broken, but does not exist, because of a re-upload */
-				|| GitCraftConfig.yarnMissingReuploadedVersions.contains(mcVersion.version);
 		}
 
 		public boolean doMappingsExist(McVersion mcVersion) {
 			return switch (this) {
-				case MOJMAP_PARCHMENT -> {
+				/*case MOJMAP_PARCHMENT -> {
 					try {
 						yield mcVersion.hasMappings && !mcVersion.snapshot && !GitCraftConfig.parchmentMissingVersions.contains(mcVersion.version) && SemanticVersion.parse(mcVersion.loaderVersion).compareTo((Version) GitCraftConfig.PARCHMENT_START_VERSION) >= 0;
 					} catch (VersionParsingException e) {
@@ -102,13 +88,23 @@ public class MappingHelper {
 					} catch (VersionParsingException e) {
 						throw new RuntimeException(e);
 					}
+				}*/
+				case CALAMUS -> {
+					try {
+						yield SemanticVersion.parse(mcVersion.loaderVersion).compareTo((Version) GitCraftConfig.CALAMUS_MAPPINGS_START_VERSION) >= 0 && SemanticVersion.parse(mcVersion.loaderVersion).compareTo((Version) GitCraftConfig.CALAMUS_MAPPINGS_END_VERSION) <= 0;
+					} catch (VersionParsingException e) {
+						throw new RuntimeException(e);
+					}
+				}
+				case FEATHER -> {
+					yield getFeatherLatestBuild(mcVersion) != null;
 				}
 			};
 		}
 
 		public Optional<Path> getMappingsPath(McVersion mcVersion) {
 			return switch (this) {
-				case MOJMAP_PARCHMENT -> {
+				/*case MOJMAP_PARCHMENT -> {
 					try {
 						yield Optional.of(mappingsPathParchment(mcVersion));
 					} catch (Exception e) {
@@ -124,7 +120,24 @@ public class MappingHelper {
 				}
 				case YARN ->
 					Optional.ofNullable(isYarnBrokenVersion(mcVersion) ? null : mappingsPathYarn(mcVersion)); // exclude broken versions
-				case FABRIC_INTERMEDIARY -> Optional.ofNullable(mappingsPathIntermediary(mcVersion));
+				case FABRIC_INTERMEDIARY -> Optional.ofNullable(mappingsPathIntermediary(mcVersion));*/
+				case CALAMUS -> {
+					yield Optional.of(mappingsPathCalamus(mcVersion));
+				}
+				case FEATHER -> {
+					yield Optional.of(mappingsPathFeather(mcVersion));
+				}
+			};
+		}
+
+		public Optional<Path> getSimplifiedMappingsPath(McVersion mcVersion) {
+			return switch (this) {
+				case CALAMUS -> {
+					yield Optional.of(mappingsPathCalamus(mcVersion));
+				}
+				case FEATHER -> {
+					yield Optional.of(mappingsPathFeatherSimplified(mcVersion));
+				}
 			};
 		}
 
@@ -140,84 +153,45 @@ public class MappingHelper {
 		}
 	}
 
-	public static final String FABRIC_YARN_META = "https://meta.fabricmc.net/v2/versions/yarn";
+	public static final String ORNITHE_FEATHER_META = "https://meta.ornithemc.net/v3/versions/feather";
 
-	private static Map<String, FabricYarnVersionMeta> yarnVersions = null;
+	private static Map<String, OrnitheFeatherVersionMeta> featherVersions = null;
 
-	public static FabricYarnVersionMeta getYarnLatestBuild(McVersion mcVersion) {
-		if (yarnVersions == null) {
+	public static OrnitheFeatherVersionMeta getFeatherLatestBuild(McVersion mcVersion) {
+		if (featherVersions == null) {
 			try {
-				List<FabricYarnVersionMeta> yarnVersionMetas = SerializationHelper.deserialize(SerializationHelper.fetchAllFromURL(new URL(FABRIC_YARN_META)), SerializationHelper.TYPE_LIST_FABRIC_YARN_VERSION_META);
-				yarnVersions = yarnVersionMetas.stream().collect(Collectors.groupingBy(FabricYarnVersionMeta::gameVersion)).values().stream().map(fabricYarnVersionMetas -> fabricYarnVersionMetas.stream().max(Comparator.naturalOrder())).filter(Optional::isPresent).map(Optional::get).collect(Collectors.toMap(FabricYarnVersionMeta::gameVersion, Function.identity()));
+				List<OrnitheFeatherVersionMeta> featherVersionMetas = SerializationHelper.deserialize(SerializationHelper.fetchAllFromURL(new URL(ORNITHE_FEATHER_META)), SerializationHelper.TYPE_LIST_ORNITHE_FEATHER_VERSION_META);
+				featherVersions = featherVersionMetas.stream().collect(Collectors.groupingBy(OrnitheFeatherVersionMeta::gameVersion)).values().stream().map(ornitheFeatherVersionMetas -> ornitheFeatherVersionMetas.stream().max(Comparator.naturalOrder())).filter(Optional::isPresent).map(Optional::get).collect(Collectors.toMap(OrnitheFeatherVersionMeta::gameVersion, Function.identity()));
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
 		}
-		return yarnVersions.get(mappingsIntermediaryPathQuirkVersion(mcVersion.version));
+		return featherVersions.get(mcVersion.version);
 	}
 
 	public static MemoryMappingTree createIntermediaryMappingsProvider(McVersion mcVersion) throws IOException {
 		MemoryMappingTree mappingTree = new MemoryMappingTree();
-		Path intermediaryPath = mappingsPathIntermediary(mcVersion);
+		Path intermediaryPath = mappingsPathCalamus(mcVersion);
 		if (intermediaryPath != null) {
 			MappingReader.read(intermediaryPath, mappingTree);
 		}
 		return mappingTree;
 	}
 
-	private static Path mappingsPathParchment(McVersion mcVersion) throws Exception {
-		String parchmentLatestReleaseVersionBuild = RemoteHelper.readMavenLatestRelease(String.format("https://maven.parchmentmc.org/org/parchmentmc/data/parchment-%s/maven-metadata.xml", mcVersion.version));
-		Path mappingsFileTiny = GitCraft.MAPPINGS.resolve(String.format("%s-parchment-%s-%s.tiny", mcVersion.version, mcVersion.version, parchmentLatestReleaseVersionBuild));
-		if (mappingsFileTiny.toFile().exists()) {
-			return mappingsFileTiny;
+	private static Path mappingsPathFeather(McVersion mcVersion) {
+		OrnitheFeatherVersionMeta featherVersion = getFeatherLatestBuild(mcVersion);
+		if (featherVersion == null) {
+			// MiscHelper.panic("Tried to use feather for version %s. Feather mappings do not exist for this version.", mcVersion.version);
+			MiscHelper.println("Tried to use feather for version %s. Feather mappings do not exist for this version in meta.ornithemc.net. Falling back to generated version...", mcVersion.version);
+			featherVersion = new OrnitheFeatherVersionMeta(mcVersion.version, "+build.", 1, String.format("net.ornithemc:feather:%s+build.%s:unknown-fallback", mcVersion.version, 1), String.format("%s+build.%s", mcVersion.version, 1), !mcVersion.snapshot);
 		}
-		Path mappingsFileJson = GitCraft.MAPPINGS.resolve(String.format("%s-parchment-%s-%s.json", mcVersion.version, mcVersion.version, parchmentLatestReleaseVersionBuild));
-		if (!mappingsFileJson.toFile().exists()) {
-			Path mappingsFileJar = GitCraft.MAPPINGS.resolve(String.format("%s-parchment-%s-%s.jar", mcVersion.version, mcVersion.version, parchmentLatestReleaseVersionBuild));
-			RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(
-				String.format("https://maven.parchmentmc.org/org/parchmentmc/data/parchment-%s/%s/parchment-%s-%s.zip", mcVersion.version, parchmentLatestReleaseVersionBuild, mcVersion.version, parchmentLatestReleaseVersionBuild),
-				mappingsFileJar,
-				null,
-				"parchment mapping",
-				mcVersion.version
-			);
-			try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(mappingsFileJar)) {
-				Path mappingsPathInJar = fs.get().getPath("parchment.json");
-				Files.copy(mappingsPathInJar, mappingsFileJson, StandardCopyOption.REPLACE_EXISTING);
-			} catch (IOException e) {
-				mappingsFileJar.toFile().delete();
-				throw new RuntimeException("Parchment mappings are invalid");
-			}
-		}
-		Path mappingsFileMojmap = mappingsPathMojMap(mcVersion);
-		ParchmentTreeV1 parchmentTreeV1 = SerializationHelper.deserialize(SerializationHelper.fetchAllFromPath(mappingsFileJson), ParchmentTreeV1.class);
-		MemoryMappingTree mappingTree = new MemoryMappingTree();
-		{
-			MappingSourceNsSwitch nsSwitchIntermediary = new MappingSourceNsSwitch(mappingTree, MappingsNamespace.NAMED.toString());
-			MappingReader.read(mappingsFileMojmap, nsSwitchIntermediary);
-		}
-		try (MappingWriter writer = MappingWriter.create(mappingsFileTiny, MappingFormat.TINY_2)) {
-			parchmentTreeV1.visit(mappingTree, MappingsNamespace.NAMED.toString());
-			MappingSourceNsSwitch sourceNsSwitch = new MappingSourceNsSwitch(writer, MappingsNamespace.OFFICIAL.toString());
-			mappingTree.accept(sourceNsSwitch);
-		}
-		return mappingsFileTiny;
-	}
-
-	private static Path mappingsPathYarn(McVersion mcVersion) {
-		FabricYarnVersionMeta yarnVersion = getYarnLatestBuild(mcVersion);
-		if (yarnVersion == null) {
-			// MiscHelper.panic("Tried to use yarn for version %s. Yarn mappings do not exist for this version.", mcVersion.version);
-			MiscHelper.println("Tried to use yarn for version %s. Yarn mappings do not exist for this version in meta.fabricmc.net. Falling back to generated version...", mcVersion.version);
-			yarnVersion = new FabricYarnVersionMeta(mcVersion.version, "+build.", 1, String.format("net.fabricmc:yarn:%s+build.%s:unknown-fallback", mcVersion.version, 1), String.format("%s+build.%s", mcVersion.version, 1), !mcVersion.snapshot);
-		}
-		Path mappingsFile = GitCraft.MAPPINGS.resolve(String.format("%s-yarn-build.%s.tiny", mcVersion.version, yarnVersion.build()));
+		Path mappingsFile = GitCraft.MAPPINGS.resolve(String.format("%s-feather-build.%s.tiny", mcVersion.version, featherVersion.build()));
 		if (mappingsFile.toFile().exists()) {
 			return mappingsFile;
 		}
-		Path mappingsFileJar = GitCraft.MAPPINGS.resolve(String.format("%s-yarn-build.%s.jar", mcVersion.version, yarnVersion.build()));
+		Path mappingsFileJar = GitCraft.MAPPINGS.resolve(String.format("%s-feather-build.%s.jar", mcVersion.version, featherVersion.build()));
 		try {
-			RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(yarnVersion.makeMavenURLMergedV2(), mappingsFileJar, null, "yarn mapping", mcVersion.version);
+			RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(featherVersion.makeMavenURLMergedV2(), mappingsFileJar, null, "feather mapping", mcVersion.version);
 			try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(mappingsFileJar)) {
 				Path mappingsPathInJar = fs.get().getPath("mappings", "mappings.tiny");
 				Files.copy(mappingsPathInJar, mappingsFile, StandardCopyOption.REPLACE_EXISTING);
@@ -226,9 +200,9 @@ public class MappingHelper {
 		} catch (IOException | RuntimeException ignored) {
 			mappingsFileJar.toFile().delete();
 		}
-		MiscHelper.println("Merged Yarn mappings do not exist for %s, merging with intermediary ourselves...", mcVersion.version);
-		Path mappingsFileUnmerged = mappingsPathYarnUnmerged(mcVersion, yarnVersion);
-		Path mappingsFileIntermediary = mappingsPathIntermediary(mcVersion);
+		MiscHelper.println("Merged Feather mappings do not exist for %s, merging with intermediary ourselves...", mcVersion.version);
+		Path mappingsFileUnmerged = mappingsPathFeatherUnmerged(mcVersion, featherVersion);
+		Path mappingsFileIntermediary = mappingsPathCalamus(mcVersion);
 		MemoryMappingTree mappingTree = new MemoryMappingTree();
 		try {
 			// Intermediary first
@@ -236,18 +210,7 @@ public class MappingHelper {
 			MappingReader.read(mappingsFileIntermediary, nsSwitchIntermediary);
 			// Then named yarn
 			MappingSourceNsSwitch nsSwitchYarn = new MappingSourceNsSwitch(mappingTree, MappingsNamespace.INTERMEDIARY.toString());
-			try {
-				// unmerged yarn mappings (1.14 - 1.14.3 (exclusive)) seem to have their mappings backwards
-				SemanticVersion targetVersion = SemanticVersion.parse(mcVersion.loaderVersion);
-				if (targetVersion.compareTo((Version) GitCraftConfig.YARN_CORRECTLY_ORIENTATED_MAPPINGS_VERSION) < 0) {
-					MiscHelper.println("Yarn mappings for version %s are known to have switched namespaces", mcVersion.version);
-					MappingReader.read(mappingsFileUnmerged, new MappingNsRenamer(nsSwitchYarn, Map.of(MappingsNamespace.INTERMEDIARY.toString(), MappingsNamespace.NAMED.toString(), MappingsNamespace.NAMED.toString(), MappingsNamespace.INTERMEDIARY.toString())));
-				} else {
-					MappingReader.read(mappingsFileUnmerged, nsSwitchYarn);
-				}
-			} catch (VersionParsingException e) {
-				throw new RuntimeException(e);
-			}
+			MappingReader.read(mappingsFileUnmerged, nsSwitchYarn);
 			yarn_fixInnerClasses(mappingTree);
 			try (MappingWriter writer = MappingWriter.create(mappingsFile, MappingFormat.TINY_2)) {
 				MappingNsCompleter nsCompleter = new MappingNsCompleter(writer, Map.of(MappingsNamespace.NAMED.toString(), MappingsNamespace.INTERMEDIARY.toString()), true);
@@ -256,6 +219,31 @@ public class MappingHelper {
 				mappingTree.accept(sourceNsSwitch);
 			}
 			return mappingsFile;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static Path mappingsPathFeatherSimplified(McVersion mcVersion) {
+		OrnitheFeatherVersionMeta featherVersion = getFeatherLatestBuild(mcVersion);
+		if (featherVersion == null) {
+			// MiscHelper.panic("Tried to use feather for version %s. Feather mappings do not exist for this version.", mcVersion.version);
+			MiscHelper.println("Tried to use feather for version %s. Feather mappings do not exist for this version in meta.ornithemc.net. Falling back to generated version...", mcVersion.version);
+			featherVersion = new OrnitheFeatherVersionMeta(mcVersion.version, "+build.", 1, String.format("net.ornithemc:feather:%s+build.%s:unknown-fallback", mcVersion.version, 1), String.format("%s+build.%s", mcVersion.version, 1), !mcVersion.snapshot);
+		}
+		Path mappingsFile = mappingsPathFeather(mcVersion);
+		Path mappingsSimplifiedFile = GitCraft.MAPPINGS.resolve(String.format("%s-feather-build.%s-simplified.tiny", mcVersion.version, featherVersion.build()));
+		if (mappingsSimplifiedFile.toFile().exists()) {
+			return mappingsSimplifiedFile;
+		}
+		MemoryMappingTree mappingTree = new MemoryMappingTree();
+		try {
+			MappingReader.read(mappingsFile, mappingTree);
+			try (MappingWriter writer = MappingWriter.create(mappingsSimplifiedFile, MappingFormat.TINY_2)) {
+				MappingDstNsReorder dstReorder = new MappingDstNsReorder(writer, List.of(MappingsNamespace.NAMED.toString()));
+				mappingTree.accept(dstReorder);
+			}
+			return mappingsSimplifiedFile;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -291,12 +279,12 @@ public class MappingHelper {
 		return sharedName;
 	}
 
-	private static Path mappingsPathYarnUnmerged(McVersion mcVersion, FabricYarnVersionMeta yarnVersion) {
+	private static Path mappingsPathFeatherUnmerged(McVersion mcVersion, OrnitheFeatherVersionMeta featherVersion) {
 		try {
-			Path mappingsFileUnmerged = GitCraft.MAPPINGS.resolve(String.format("%s-yarn-unmerged-build.%s.tiny", mcVersion.version, yarnVersion.build()));
+			Path mappingsFileUnmerged = GitCraft.MAPPINGS.resolve(String.format("%s-feather-unmerged-build.%s.tiny", mcVersion.version, featherVersion.build()));
 			if (!mappingsFileUnmerged.toFile().exists()) {
-				Path mappingsFileUnmergedJar = GitCraft.MAPPINGS.resolve(String.format("%s-yarn-unmerged-build.%s.jar", mcVersion.version, yarnVersion.build()));
-				RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(yarnVersion.makeMavenURLUnmergedV2(), mappingsFileUnmergedJar, null, "unmerged yarn mapping", mcVersion.version);
+				Path mappingsFileUnmergedJar = GitCraft.MAPPINGS.resolve(String.format("%s-feather-unmerged-build.%s.jar", mcVersion.version, featherVersion.build()));
+				RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(featherVersion.makeMavenURLUnmergedV2(), mappingsFileUnmergedJar, null, "unmerged feather mapping", mcVersion.version);
 				try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(mappingsFileUnmergedJar)) {
 					Path mappingsPathInJar = fs.get().getPath("mappings", "mappings.tiny");
 					Files.copy(mappingsPathInJar, mappingsFileUnmerged, StandardCopyOption.REPLACE_EXISTING);
@@ -304,12 +292,12 @@ public class MappingHelper {
 			}
 			return mappingsFileUnmerged;
 		} catch (IOException | RuntimeException e) {
-			MiscHelper.println("Yarn mappings in tiny-v2 format do not exist for %s, falling back to tiny-v1 mappings...", mcVersion.version);
+			MiscHelper.println("Feather mappings in tiny-v2 format do not exist for %s, falling back to tiny-v1 mappings...", mcVersion.version);
 			try {
-				Path mappingsFileUnmergedv1 = GitCraft.MAPPINGS.resolve(String.format("%s-yarn-unmerged-build.%s-v1.tiny", mcVersion.version, yarnVersion.build()));
+				Path mappingsFileUnmergedv1 = GitCraft.MAPPINGS.resolve(String.format("%s-feather-unmerged-build.%s-v1.tiny", mcVersion.version, featherVersion.build()));
 				if (!mappingsFileUnmergedv1.toFile().exists()) {
-					Path mappingsFileUnmergedJarv1 = GitCraft.MAPPINGS.resolve(String.format("%s-yarn-unmerged-build.%s-v1.jar", mcVersion.version, yarnVersion.build()));
-					RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(yarnVersion.makeMavenURLUnmergedV1(), mappingsFileUnmergedJarv1, null, "unmerged yarn mapping (v1 fallback)", mcVersion.version);
+					Path mappingsFileUnmergedJarv1 = GitCraft.MAPPINGS.resolve(String.format("%s-feather-unmerged-build.%s-v1.jar", mcVersion.version, featherVersion.build()));
+					RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(featherVersion.makeMavenURLUnmergedV1(), mappingsFileUnmergedJarv1, null, "unmerged feather mapping (v1 fallback)", mcVersion.version);
 					try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(mappingsFileUnmergedJarv1)) {
 						Path mappingsPathInJar = fs.get().getPath("mappings", "mappings.tiny");
 						Files.copy(mappingsPathInJar, mappingsFileUnmergedv1, StandardCopyOption.REPLACE_EXISTING);
@@ -317,19 +305,18 @@ public class MappingHelper {
 				}
 				return mappingsFileUnmergedv1;
 			} catch (IOException e2) {
-				MiscHelper.println("Yarn mappings for version %s cannot be fetched. Giving up after trying merged-v2, v2, and v1 mappings.", mcVersion.version);
+				MiscHelper.println("Feather mappings for version %s cannot be fetched. Giving up after trying merged-v2, v2, and v1 mappings.", mcVersion.version);
 				throw new RuntimeException(e);
 			}
 		}
 	}
 
-	private static String mappingsIntermediaryPathQuirkVersion(String version) {
-		return GitCraftConfig.yarnInconsistentVersionNaming.getOrDefault(version, version);
-	}
-
-	private static Path mappingsPathIntermediary(McVersion mcVersion) {
+	private static Path mappingsPathCalamus(McVersion mcVersion) {
 		try {
-			if (SemanticVersion.parse(mcVersion.loaderVersion).compareTo((Version) GitCraftConfig.INTERMEDIARY_MAPPINGS_START_VERSION) < 0) {
+			if (SemanticVersion.parse(mcVersion.loaderVersion).compareTo((Version) GitCraftConfig.CALAMUS_MAPPINGS_START_VERSION) < 0) {
+				return null;
+			}
+			if (SemanticVersion.parse(mcVersion.loaderVersion).compareTo((Version) GitCraftConfig.CALAMUS_MAPPINGS_END_VERSION) > 0) {
 				return null;
 			}
 		} catch (VersionParsingException e) {
@@ -337,29 +324,8 @@ public class MappingHelper {
 		}
 		Path mappingsFile = GitCraft.MAPPINGS.resolve(mcVersion.version + "-intermediary.tiny");
 		if (!mappingsFile.toFile().exists()) {
-			RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(RemoteHelper.urlencodedURL(String.format("https://raw.githubusercontent.com/FabricMC/intermediary/master/mappings/%s.tiny", mappingsIntermediaryPathQuirkVersion(mcVersion.version))), mappingsFile, null, "intermediary mapping", mcVersion.version);
+			RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetry(RemoteHelper.urlencodedURL(String.format("https://raw.githubusercontent.com/OrnitheMC/calamus/main/mappings/%s.tiny", mcVersion.version)), mappingsFile, null, "intermediary mapping", mcVersion.version);
 		}
-		return mappingsFile;
-	}
-
-	private static Path mappingsPathMojMap(McVersion mcVersion) throws IOException {
-		Path mappingsFile = GitCraft.MAPPINGS.resolve(mcVersion.version + "-moj.tiny");
-
-		if (!mappingsFile.toFile().exists()) {
-			MemoryMappingTree mappingTree = new MemoryMappingTree();
-
-			// Make official the source namespace
-			MappingSourceNsSwitch nsSwitch = new MappingSourceNsSwitch(mappingTree, MappingsNamespace.OFFICIAL.toString());
-
-			try (BufferedReader clientBufferedReader = Files.newBufferedReader(mcVersion.artifacts.clientMappings().fetchArtifact().toPath(), StandardCharsets.UTF_8); BufferedReader serverBufferedReader = Files.newBufferedReader(mcVersion.artifacts.serverMappings().fetchArtifact().toPath(), StandardCharsets.UTF_8)) {
-				ProGuardReader.read((Reader) clientBufferedReader, MappingsNamespace.NAMED.toString(), MappingsNamespace.OFFICIAL.toString(), nsSwitch);
-				ProGuardReader.read((Reader) serverBufferedReader, MappingsNamespace.NAMED.toString(), MappingsNamespace.OFFICIAL.toString(), nsSwitch);
-			}
-			try (MappingWriter w = MappingWriter.create(mappingsFile, MappingFormat.TINY_2)) {
-				mappingTree.accept(w);
-			}
-		}
-
 		return mappingsFile;
 	}
 }

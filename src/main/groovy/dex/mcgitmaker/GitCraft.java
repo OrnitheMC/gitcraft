@@ -31,6 +31,7 @@ public class GitCraft {
 
 	public static final Path DECOMPILED_WORKINGS = MAIN_ARTIFACT_STORE.resolve("decompiled");
 	public static final Path MAPPINGS = MAIN_ARTIFACT_STORE.resolve("mappings");
+	public static final Path NESTS = MAIN_ARTIFACT_STORE.resolve("nests");
 	public static final Path REPO = MAIN_ARTIFACT_STORE.getParent().resolve("minecraft-repo");
 	public static final Path MC_VERSION_STORE = MAIN_ARTIFACT_STORE.resolve("mc-versions");
 	public static final Path LIBRARY_STORE = MAIN_ARTIFACT_STORE.resolve("libraries");

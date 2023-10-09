@@ -1,6 +1,7 @@
 package com.github.winplay02;
 
-import com.github.winplay02.meta.FabricYarnVersionMeta;
+import com.github.winplay02.meta.OrnitheFeatherVersionMeta;
+import com.github.winplay02.meta.OrnitheNestsVersionMeta;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -32,7 +33,9 @@ public class SerializationHelper {
 	};
 	public static final TypeToken<TreeMap<String, String>> TYPE_TREE_MAP_STRING_STRING = new TypeToken<TreeMap<String, String>>() {
 	};
-	public static final TypeToken<ArrayList<FabricYarnVersionMeta>> TYPE_LIST_FABRIC_YARN_VERSION_META = new TypeToken<ArrayList<FabricYarnVersionMeta>>() {
+	public static final TypeToken<ArrayList<OrnitheFeatherVersionMeta>> TYPE_LIST_ORNITHE_FEATHER_VERSION_META = new TypeToken<ArrayList<OrnitheFeatherVersionMeta>>() {
+	};
+	public static final TypeToken<ArrayList<OrnitheNestsVersionMeta>> TYPE_LIST_ORNITHE_NESTS_VERSION_META = new TypeToken<ArrayList<OrnitheNestsVersionMeta>>() {
 	};
 
 	static {
