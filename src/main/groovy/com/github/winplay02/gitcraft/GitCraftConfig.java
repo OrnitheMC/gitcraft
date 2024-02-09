@@ -70,9 +70,9 @@ public class GitCraftConfig {
 	static {
 		try {
 			CALAMUS_MAPPINGS_START_VERSION = SemanticVersion.parse("1.3.0-pre+07261249");
-			CALAMUS_MAPPINGS_END_VERSION = SemanticVersion.parse("1.13.2");
+			CALAMUS_MAPPINGS_END_VERSION = SemanticVersion.parse("1.14.4");
 			FEATHER_MAPPINGS_START_VERSION = SemanticVersion.parse("1.3.0-pre+07261249");
-			FEATHER_MAPPINGS_END_VERSION = SemanticVersion.parse("1.13.2");
+			FEATHER_MAPPINGS_END_VERSION = SemanticVersion.parse("1.14.4");
 
 			INTERMEDIARY_MAPPINGS_START_VERSION = SemanticVersion.parse("1.14-alpha.18.43.b");
 			YARN_MAPPINGS_START_VERSION = SemanticVersion.parse("1.14-alpha.18.49.a");
