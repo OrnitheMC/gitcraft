@@ -20,7 +20,9 @@ To disabled versioning entirely (and only decompile), specify `--no-repo`.
 To disable special versions (e.g. april fools or combat snapshots), specify `--skip-nonlinear`.
 To disable either snapshots or stable releases, use either `--only-stable` or `--only-snapshot`.
 
-To use other mappings than mojmaps, specify `--mappings=<mapping>`. Supported mappings are `mojmap`, `mojmap_parchment`, `fabric_intermediary` and `yarn`.
+To use other mappings than mojmaps, specify `--mappings=<mapping>`. Supported mappings are `mojmap`, `mojmap_parchment`, `fabric_intermediary`, `yarn`, `calamus` and `feather`.
+
+To use a different manifest than the default minecraft launcher manifest, specify `--manifest=<manifest>`. Supported manifests are `minecraft_launcher` and `skyrising`.
 
 Fallback mappings can be used with `--fallback-mappings`. For example `mojmap` could be used as a fallback to a `mojmap_parchment` mapping, as not every version of minecraft is available.
 

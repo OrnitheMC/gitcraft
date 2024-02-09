@@ -31,11 +31,13 @@ public abstract class ManifestProvider {
 	protected TreeMap<String, String> semverCache = null;
 	protected LinkedHashMap<String, OrderedVersion> versionMeta = null;
 
-	protected ManifestProvider(DescribedURL[] manifestSourceUrls) {
+	protected ManifestProvider(DescribedURL[] manifestSourceUrls) throws IOException {
 		this(manifestSourceUrls, new Artifact[0]);
 	}
 
-	protected ManifestProvider(DescribedURL[] manifestSourceUrls, Artifact[] singleMetaUrls) {
+	protected ManifestProvider(DescribedURL[] manifestSourceUrls, Artifact[] singleMetaUrls) throws IOException {
+		GitCraftPaths.initializePaths(GitCraftPaths.lookupCurrentWorkingDirectory());
+
 		this.rootPath = GitCraftPaths.MC_VERSION_META_STORE.resolve(getInternalName());
 		this.manifestSourceUrls = new ArrayList<>(List.of(manifestSourceUrls));
 		this.singleMetaUrls = new ArrayList<>(List.of(singleMetaUrls));

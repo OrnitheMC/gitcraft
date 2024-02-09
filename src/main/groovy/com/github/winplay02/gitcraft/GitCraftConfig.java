@@ -1,5 +1,7 @@
 package com.github.winplay02.gitcraft;
 
+import com.github.winplay02.gitcraft.manifest.ManifestFlavour;
+import com.github.winplay02.gitcraft.manifest.ManifestProvider;
 import com.github.winplay02.gitcraft.mappings.MappingFlavour;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.MiscHelper;
@@ -50,8 +52,11 @@ public class GitCraftConfig {
 	public String refreshMaxVersion = null;
 
 	/// Mapping settings
-	public MappingFlavour usedMapping = MappingFlavour.FEATHER;
+	public MappingFlavour usedMapping = MappingFlavour.MOJMAP;
 	public MappingFlavour[] fallbackMappings = null;
+
+	/// Manifest settings
+	public ManifestFlavour manifest = ManifestFlavour.MINECRAFT_LAUNCHER;
 
 	/// Version settings
 	public boolean onlyStableReleases = false;

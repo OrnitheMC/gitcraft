@@ -1,5 +1,6 @@
 package com.github.winplay02.gitcraft
 
+import com.github.winplay02.gitcraft.manifest.ManifestFlavour
 import com.github.winplay02.gitcraft.mappings.MappingFlavour
 import com.github.winplay02.gitcraft.util.MiscHelper
 import groovy.cli.picocli.CliBuilder
@@ -43,8 +44,9 @@ class GitCraftCli {
 		cli_args._(longOpt:
 			'refresh-max-version', args: 1, argName:
 				'version', 'Restricts the max. refreshed version to the one provided. This options will cause the git repository to refresh.');
-		cli_args._(longOpt: 'mappings', "Specifies the mappings used to decompile the source tree. Mojmaps are selected by default. Possible values are: ${Arrays.stream(MappingFlavour.values()).map(Object::toString).collect(Collectors.joining(", "))}", type: MappingFlavour, argName: "mapping", defaultValue: "feather");
+		cli_args._(longOpt: 'mappings', "Specifies the mappings used to decompile the source tree. Mojmaps are selected by default. Possible values are: ${Arrays.stream(MappingFlavour.values()).map(Object::toString).collect(Collectors.joining(", "))}", type: MappingFlavour, argName: "mapping", defaultValue: "mojmap");
 		cli_args._(longOpt: 'fallback-mappings', args: -2 /*CliBuilder.COMMONS_CLI_UNLIMITED_VALUES*/, valueSeparator: ',', argName: "mapping", "If the primary mapping fails, these mappings are tried (in given order). By default none is tried as a fallback. Possible values are: ${Arrays.stream(MappingFlavour.values()).map(Object::toString).collect(Collectors.joining(", "))}", type: MappingFlavour[]);
+		cli_args._(longOpt: 'manifest', "Specifies the manifest to use. Minecraft launcher manifest is selected by default. Possible values are: ${Arrays.stream(ManifestFlavour.values()).map(Object::toString).collect(Collectors.joining(", "))}", type: ManifestFlavour, argName: "manifest", defaultValue: "minecraft_launcher");
 		cli_args._(longOpt: 'only-stable', 'Only decompiles stable releases.');
 		cli_args._(longOpt: 'only-snapshot', 'Only decompiles snapshots (includes pending and non-linear, if not otherwise specified).');
 		cli_args._(longOpt: 'override-repo-target', args: 1, argName: 'path', type: Path,
@@ -110,6 +112,7 @@ class GitCraftCli {
 			MappingFlavour[] fallbackMappings = cli_args_parsed.'fallback-mappingss';
 			config.fallbackMappings = fallbackMappings;
 		}
+		config.manifest = cli_args_parsed.'manifest';
 		config.onlyStableReleases = cli_args_parsed.hasOption("only-stable");
 		config.onlySnapshots = cli_args_parsed.hasOption("only-snapshot");
 		if (cli_args_parsed.hasOption("override-repo-target")) {

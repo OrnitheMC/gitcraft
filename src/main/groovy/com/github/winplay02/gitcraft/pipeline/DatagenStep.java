@@ -101,7 +101,7 @@ public class DatagenStep extends Step {
 	private TreeMap<OrderedVersion, Artifact> getExtVanillaWorldgenPackOrderedVersions() {
 		if (orderedExtVanillaWorldgen == null) {
 			try {
-				Map<String, OrderedVersion> manifestVersionMetaMap = GitCraft.manifestProvider.getVersionMeta();
+				Map<String, OrderedVersion> manifestVersionMetaMap = GitCraft.config.manifest.getManifestProvider().getVersionMeta();
 				orderedExtVanillaWorldgen = new TreeMap<>(EXT_VANILLA_WORLDGEN_PACK.entrySet().stream().map((entry) -> Tuple2.tuple(manifestVersionMetaMap.get(entry.getKey()), entry.getValue())).collect(Collectors.toMap(Tuple2::getV1, Tuple2::getV2)));
 			} catch (IOException e) {
 				throw new RuntimeException(e);

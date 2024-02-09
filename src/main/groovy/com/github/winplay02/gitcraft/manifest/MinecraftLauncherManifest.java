@@ -11,6 +11,7 @@ import net.fabricmc.loader.api.VersionParsingException;
 import net.fabricmc.loader.impl.game.minecraft.McVersion;
 import net.fabricmc.loader.impl.game.minecraft.McVersionLookup;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.Objects;
 
 public class MinecraftLauncherManifest extends ManifestProvider {
 
-	public MinecraftLauncherManifest() {
+	public MinecraftLauncherManifest() throws IOException {
 		super(new DescribedURL[]{new DescribedURL("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json", "Launcher Meta")},
 				new Artifact[]{
 						// 1.14.3 - Combat Test
