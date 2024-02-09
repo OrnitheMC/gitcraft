@@ -38,14 +38,14 @@ public class GitCraft {
 	/// Every ManifestProvider
 	public static final ManifestProvider MINECRAFT_LAUNCHER;
 	public static final ManifestProvider SKYRISING;
-    static {
-        try {
-            MINECRAFT_LAUNCHER = new MinecraftLauncherManifest();
+	static {
+		try {
+			MINECRAFT_LAUNCHER = new MinecraftLauncherManifest();
 			SKYRISING = new SkyrisingManifest();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
     /// Every Step
 	public static Step STEP_RESET = null;
 	public static Step STEP_FETCH_ARTIFACTS = null;
