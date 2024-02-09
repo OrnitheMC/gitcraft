@@ -1,7 +1,6 @@
 package com.github.winplay02.gitcraft.manifest;
 
 import com.github.winplay02.gitcraft.GitCraftConfig;
-import com.github.winplay02.gitcraft.mappings.FeatherMappings;
 import com.github.winplay02.gitcraft.meta.VersionMeta;
 import com.github.winplay02.gitcraft.types.Artifact;
 import com.github.winplay02.gitcraft.types.OrderedVersion;

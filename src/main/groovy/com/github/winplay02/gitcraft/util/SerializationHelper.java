@@ -1,9 +1,9 @@
 package com.github.winplay02.gitcraft.util;
 
 import com.github.winplay02.gitcraft.meta.FabricYarnVersionMeta;
-import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.meta.OrnitheFeatherVersionMeta;
 import com.github.winplay02.gitcraft.meta.OrnitheNestsVersionMeta;
+import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;

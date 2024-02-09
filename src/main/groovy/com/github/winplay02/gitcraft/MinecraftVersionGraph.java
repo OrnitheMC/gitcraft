@@ -2,19 +2,12 @@ package com.github.winplay02.gitcraft;
 
 import com.github.winplay02.gitcraft.manifest.ManifestProvider;
 import com.github.winplay02.gitcraft.mappings.MappingFlavour;
-import com.github.winplay02.gitcraft.meta.LauncherMeta;
-import com.github.winplay02.gitcraft.meta.OrnitheVersionEntry;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.MiscHelper;
-import com.github.winplay02.gitcraft.util.SerializationHelper;
-import com.google.gson.reflect.TypeToken;
 import net.fabricmc.loader.api.SemanticVersion;
-import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.net.URL;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -103,8 +96,6 @@ public class MinecraftVersionGraph implements Iterable<OrderedVersion> {
 		}
 		long amountRootNodes = this.edgesBack.entrySet().stream().filter(entry -> entry.getValue().isEmpty()).count();
 		if (amountRootNodes != 1) {
-			List<Map.Entry<OrderedVersion, TreeSet<OrderedVersion>>> nodes = this.edgesBack.entrySet().stream().filter(entry -> entry.getValue().isEmpty()).toList();
-			MiscHelper.println(nodes.toString());
 			MiscHelper.panic(amountRootNodes < 1 ? "There is no root node. This either means, that the version graph is empty, or that it contains a cycle." : "There are multiple root nodes. A connected git history would not be guaranteed");
 		}
 	}

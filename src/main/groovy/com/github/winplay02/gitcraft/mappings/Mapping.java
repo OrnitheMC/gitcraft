@@ -3,7 +3,6 @@ package com.github.winplay02.gitcraft.mappings;
 import com.github.winplay02.gitcraft.pipeline.Step;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.MiscHelper;
-import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
 import net.fabricmc.tinyremapper.IMappingProvider;
 import net.fabricmc.tinyremapper.TinyUtils;
@@ -68,7 +67,7 @@ public abstract class Mapping {
 
 	protected abstract Path getMappingsPathInternal(OrderedVersion mcVersion);
 
-	public IMappingProvider getMappingsProvider(OrderedVersion mcVersion) {
+	public final IMappingProvider getMappingsProvider(OrderedVersion mcVersion) {
 		if (!doMappingsExist(mcVersion)) {
 			MiscHelper.panic("Tried to use %s-mappings for version %s. These mappings do not exist for this version.", this, mcVersion.launcherFriendlyVersionName());
 		}

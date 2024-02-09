@@ -38,9 +38,6 @@ public record OrderedVersion(
 	public static Artifact getClientJarFromMeta(VersionMeta versionMeta) {
 		if (versionMeta.downloads().client() != null) {
 			return Artifact.fromURL(versionMeta.downloads().client().url(), versionMeta.downloads().client().sha1());
-		} else {
-//			// TODO assume client and server use the same file?
-//			return getServerJarFromMeta(versionMeta);
 		}
 		return null;
 	}

@@ -10,7 +10,6 @@ import com.github.winplay02.gitcraft.util.RemoteHelper;
 import com.github.winplay02.gitcraft.util.RepoWrapper;
 import com.github.winplay02.gitcraft.util.SerializationHelper;
 import net.fabricmc.loom.util.FileSystemUtil;
-import net.fabricmc.mappingio.adapter.MappingDstNsReorder;
 import net.ornithemc.mappingutils.MappingUtils;
 import net.ornithemc.mappingutils.io.Format;
 import net.ornithemc.nester.Nester;

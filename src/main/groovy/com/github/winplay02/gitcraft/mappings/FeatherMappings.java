@@ -1,19 +1,14 @@
 package com.github.winplay02.gitcraft.mappings;
 
-import com.github.winplay02.gitcraft.GitCraft;
 import com.github.winplay02.gitcraft.GitCraftConfig;
 import com.github.winplay02.gitcraft.meta.OrnitheFeatherVersionMeta;
-import com.github.winplay02.gitcraft.meta.OrnitheVersionEntry;
 import com.github.winplay02.gitcraft.pipeline.Step;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.GitCraftPaths;
 import com.github.winplay02.gitcraft.util.MiscHelper;
 import com.github.winplay02.gitcraft.util.RemoteHelper;
 import com.github.winplay02.gitcraft.util.SerializationHelper;
-import com.google.gson.reflect.TypeToken;
 import groovy.lang.Tuple2;
-import net.fabricmc.loader.api.SemanticVersion;
-import net.fabricmc.loader.api.VersionParsingException;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
 import net.fabricmc.loom.util.FileSystemUtil;
 import net.fabricmc.mappingio.MappingReader;
