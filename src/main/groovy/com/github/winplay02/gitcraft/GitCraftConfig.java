@@ -1,7 +1,6 @@
 package com.github.winplay02.gitcraft;
 
 import com.github.winplay02.gitcraft.manifest.ManifestFlavour;
-import com.github.winplay02.gitcraft.manifest.ManifestProvider;
 import com.github.winplay02.gitcraft.mappings.MappingFlavour;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.MiscHelper;
@@ -69,15 +68,24 @@ public class GitCraftConfig {
 
 	/// Mapping quirks
 	public static final String MIN_SUPPORTED_FABRIC_LOADER = "0.15.6";
+	public static final int ORNITHE_INTERMEDIARY_GEN = 2;
 	public static final SemanticVersion CALAMUS_MAPPINGS_START_VERSION, CALAMUS_MAPPINGS_END_VERSION, FEATHER_MAPPINGS_START_VERSION, FEATHER_MAPPINGS_END_VERSION;
 	public static final SemanticVersion INTERMEDIARY_MAPPINGS_START_VERSION, YARN_MAPPINGS_START_VERSION, YARN_CORRECTLY_ORIENTATED_MAPPINGS_VERSION, PARCHMENT_START_VERSION;
+	public static final SemanticVersion FIRST_MERGEABLE_VERSION;
 
 	static {
 		try {
-			CALAMUS_MAPPINGS_START_VERSION = SemanticVersion.parse("1.3.0-pre+07261249");
+			// while Ornithe has mappings for versions older than b1.0,
+			// these versions have separate client and server jars that
+			// cannot be merged at all, while versions b1.0-1.3 can be
+			// merged after the remapping step, and versions 1.3 and up
+			// can be merged before remapping
+			CALAMUS_MAPPINGS_START_VERSION = SemanticVersion.parse("1.0.0-beta.0");
 			CALAMUS_MAPPINGS_END_VERSION = SemanticVersion.parse("1.14.4");
-			FEATHER_MAPPINGS_START_VERSION = SemanticVersion.parse("1.3.0-pre+07261249");
+			FEATHER_MAPPINGS_START_VERSION = SemanticVersion.parse("1.0.0-beta.0");
 			FEATHER_MAPPINGS_END_VERSION = SemanticVersion.parse("1.14.4");
+
+			FIRST_MERGEABLE_VERSION = SemanticVersion.parse("1.3.0-pre+07261249");
 
 			INTERMEDIARY_MAPPINGS_START_VERSION = SemanticVersion.parse("1.14-alpha.18.43.b");
 			YARN_MAPPINGS_START_VERSION = SemanticVersion.parse("1.14-alpha.18.49.a");

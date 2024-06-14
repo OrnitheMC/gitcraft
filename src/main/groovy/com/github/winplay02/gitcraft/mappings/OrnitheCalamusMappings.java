@@ -12,7 +12,7 @@ import net.fabricmc.mappingio.tree.MemoryMappingTree;
 import java.io.IOException;
 import java.nio.file.Path;
 
-public class OrnitheCalamus extends Mapping {
+public class OrnitheCalamusMappings extends Mapping {
 	@Override
 	public String getName() {
 		return null;
@@ -50,9 +50,9 @@ public class OrnitheCalamus extends Mapping {
 		if (mcVersion.semanticVersion().compareTo(String.valueOf(GitCraftConfig.CALAMUS_MAPPINGS_END_VERSION)) > 0) {
 			return null;
 		}
-		Path mappingsFile = GitCraftPaths.MAPPINGS.resolve(mcVersion.launcherFriendlyVersionName() + "-intermediary.tiny");
+		Path mappingsFile = GitCraftPaths.MAPPINGS.resolve(mcVersion.launcherFriendlyVersionName() + "-calamus-intermediary-gen%d.tiny".formatted(GitCraftConfig.ORNITHE_INTERMEDIARY_GEN));
 		if (!mappingsFile.toFile().exists()) {
-			RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetryGitHub("OrnitheMC/calamus", "main", String.format("mappings/%s.tiny", mcVersion.launcherFriendlyVersionName()), new RemoteHelper.LocalFileInfo(mappingsFile, null, "intermediary mapping", mcVersion.launcherFriendlyVersionName()));
+			RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetryGitHub("OrnitheMC/calamus", "gen%d".formatted(GitCraftConfig.ORNITHE_INTERMEDIARY_GEN), String.format("mappings/%s.tiny", mcVersion.launcherFriendlyVersionName()), new RemoteHelper.LocalFileInfo(mappingsFile, null, "intermediary mapping", mcVersion.launcherFriendlyVersionName()));
 		}
 		return mappingsFile;
 	}

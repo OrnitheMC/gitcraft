@@ -152,7 +152,7 @@ public class DatagenStep extends Step {
 		if (GitCraft.config.readableNbt) {
 			// Structures (& more)
 			{
-				Path mergedJarPath = pipelineCache.getForKey(Step.STEP_MERGE);
+				Path mergedJarPath = pipelineCache.getForKey(Step.STEP_MERGE_OBFUSCATED);
 				if (mergedJarPath == null) { // Client JAR could also work, if merge did not happen
 					MiscHelper.panic("A merged JAR for version %s does not exist", mcVersion.launcherFriendlyVersionName());
 				}

@@ -38,12 +38,15 @@ public abstract class Step {
 
 	protected static final String STEP_DATAGEN = "Datagen";
 
-	protected static final String STEP_MERGE = "Merge";
+	protected static final String STEP_MERGE_OBFUSCATED = "Merge Obfuscated";
 
 	protected static final String STEP_PREPARE_MAPPINGS = "Prepare Mappings";
 
 	protected static final String STEP_REMAP = "Remap";
-	protected static final String STEP_NESTS = "Nests";
+
+	protected static final String STEP_MERGE_MAPPED = "Merge Mapped";
+
+	protected static final String STEP_APPLY_NESTS = "Apply Nests";
 
 	protected static final String STEP_UNPICK = "Unpick";
 

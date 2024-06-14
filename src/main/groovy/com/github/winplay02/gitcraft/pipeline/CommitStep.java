@@ -211,17 +211,12 @@ public class CommitStep extends Step {
 
 	private void copyAssets(PipelineCache pipelineCache, OrderedVersion mcVersion, RepoWrapper repo) throws IOException {
 		if (GitCraft.config.loadAssets || GitCraft.config.loadIntegratedDatapack) {
-			Path mergedJarPath = pipelineCache.getForKey(Step.STEP_MERGE);
-			if (mergedJarPath == null) { // Client JAR could also work, if merge did not happen
-				MiscHelper.panic("A merged JAR for version %s does not exist", mcVersion.launcherFriendlyVersionName());
+			Path artifactRootPath = pipelineCache.getForKey(Step.STEP_FETCH_ARTIFACTS);
+			if (mcVersion.hasClientCode()) {
+				copyAssetsAndData(mcVersion, mcVersion.clientJar().resolve(artifactRootPath), repo);
 			}
-			try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(mergedJarPath)) {
-				if (GitCraft.config.loadAssets) {
-					MiscHelper.copyLargeDir(fs.get().getPath("assets"), repo.getRootPath().resolve("minecraft").resolve("resources").resolve("assets"));
-				}
-				if (GitCraft.config.loadIntegratedDatapack) {
-					MiscHelper.copyLargeDir(fs.get().getPath("data"), repo.getRootPath().resolve("minecraft").resolve("resources").resolve("data"));
-				}
+			if (mcVersion.hasServerCode()) {
+				copyAssetsAndData(mcVersion, mcVersion.serverJar().resolve(artifactRootPath), repo);
 			}
 		}
 		if (GitCraft.config.loadDatagenRegistry || (GitCraft.config.readableNbt && GitCraft.config.loadIntegratedDatapack)) {
@@ -242,6 +237,20 @@ public class CommitStep extends Step {
 				try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(GitCraft.STEP_DATAGEN.getDatagenSNBTArchive(artifactsRootPath))) {
 					MiscHelper.copyLargeDir(fs.getPath("data"), repo.getRootPath().resolve("minecraft").resolve("resources").resolve("datagen-snbt"));
 				}
+			}
+		}
+	}
+
+	private void copyAssetsAndData(OrderedVersion mcVersion, Path jar, RepoWrapper repo) throws IOException {
+		if (jar == null) {
+			MiscHelper.panic("Missing JAR for version %s", mcVersion.launcherFriendlyVersionName());
+		}
+		try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(jar)) {
+			if (GitCraft.config.loadAssets) {
+				MiscHelper.copyLargeDir(fs.get().getPath("assets"), repo.getRootPath().resolve("minecraft").resolve("resources").resolve("assets"));
+			}
+			if (GitCraft.config.loadIntegratedDatapack) {
+				MiscHelper.copyLargeDir(fs.get().getPath("data"), repo.getRootPath().resolve("minecraft").resolve("resources").resolve("data"));
 			}
 		}
 	}

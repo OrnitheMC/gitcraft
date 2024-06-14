@@ -10,7 +10,8 @@ import com.github.winplay02.gitcraft.pipeline.DecompileStep;
 import com.github.winplay02.gitcraft.pipeline.FetchArtifactsStep;
 import com.github.winplay02.gitcraft.pipeline.FetchAssetsStep;
 import com.github.winplay02.gitcraft.pipeline.FetchLibrariesStep;
-import com.github.winplay02.gitcraft.pipeline.MergeStep;
+import com.github.winplay02.gitcraft.pipeline.MergeMappedStep;
+import com.github.winplay02.gitcraft.pipeline.MergeObfuscatedStep;
 import com.github.winplay02.gitcraft.pipeline.PrepareMappingsStep;
 import com.github.winplay02.gitcraft.pipeline.RemapStep;
 import com.github.winplay02.gitcraft.pipeline.ResetStep;
@@ -20,7 +21,7 @@ import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.GitCraftPaths;
 import com.github.winplay02.gitcraft.util.MiscHelper;
 import com.github.winplay02.gitcraft.util.RepoWrapper;
-import com.github.winplay02.gitcraft.pipeline.NestsStep;
+import com.github.winplay02.gitcraft.pipeline.ApplyNestsStep;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ public class GitCraft {
 	/// Every Mapping
 	public static final MojangMappings MOJANG_MAPPINGS = new MojangMappings();
 	public static final FabricIntermediaryMappings FABRIC_INTERMEDIARY_MAPPINGS = new FabricIntermediaryMappings();
-	public static final OrnitheCalamus ORNITHE_CALAMUS = new OrnitheCalamus();
+	public static final OrnitheCalamusMappings ORNITHE_CALAMUS = new OrnitheCalamusMappings();
 	public static final Mapping YARN_MAPPINGS = new YarnMappings(FABRIC_INTERMEDIARY_MAPPINGS);
 	public static final Mapping MOJANG_PARCHMENT_MAPPINGS = new ParchmentMappings(MOJANG_MAPPINGS);
 	public static final Mapping FEATHER_MAPPINGS = new FeatherMappings(ORNITHE_CALAMUS);
@@ -51,11 +52,12 @@ public class GitCraft {
 	public static Step STEP_FETCH_ARTIFACTS = null;
 	public static Step STEP_FETCH_LIBRARIES = null;
 	public static Step STEP_FETCH_ASSETS = null;
-	public static Step STEP_MERGE = null;
+	public static Step STEP_MERGE_OBFUSCATED = null;
 	public static DatagenStep STEP_DATAGEN = null;
 	public static Step STEP_PREPARE_MAPPINGS = null;
 	public static Step STEP_REMAP = null;
-	public static Step STEP_NESTS = null;
+	public static Step STEP_MERGE_MAPPED = null;
+	public static Step STEP_APPLY_NESTS = null;
 	public static Step STEP_UNPICK = null;
 	public static Step STEP_DECOMPILE = null;
 	public static CommitStep STEP_COMMIT = null;
@@ -87,11 +89,12 @@ public class GitCraft {
 			DEFAULT_PIPELINE.add(STEP_FETCH_ARTIFACTS = new FetchArtifactsStep());
 			DEFAULT_PIPELINE.add(STEP_FETCH_LIBRARIES = new FetchLibrariesStep());
 			DEFAULT_PIPELINE.add(STEP_FETCH_ASSETS = new FetchAssetsStep());
-			DEFAULT_PIPELINE.add(STEP_MERGE = new MergeStep());
+			DEFAULT_PIPELINE.add(STEP_MERGE_OBFUSCATED = new MergeObfuscatedStep());
 			DEFAULT_PIPELINE.add(STEP_DATAGEN = new DatagenStep());
 			DEFAULT_PIPELINE.add(STEP_PREPARE_MAPPINGS = new PrepareMappingsStep());
 			DEFAULT_PIPELINE.add(STEP_REMAP = new RemapStep());
-			DEFAULT_PIPELINE.add(STEP_NESTS = new NestsStep());
+			DEFAULT_PIPELINE.add(STEP_MERGE_MAPPED = new MergeMappedStep());
+			DEFAULT_PIPELINE.add(STEP_APPLY_NESTS = new ApplyNestsStep());
 			DEFAULT_PIPELINE.add(STEP_UNPICK = new UnpickStep());
 			DEFAULT_PIPELINE.add(STEP_DECOMPILE = new DecompileStep());
 			DEFAULT_PIPELINE.add(STEP_COMMIT = new CommitStep());

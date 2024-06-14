@@ -52,7 +52,7 @@ public class UnpickStep extends Step {
 			Files.delete(unpickedPath);
 		}
 		Path libraryRoot = pipelineCache.getForKey(Step.STEP_FETCH_LIBRARIES);
-		Path remappedPath = pipelineCache.getForKey(Step.STEP_REMAP);
+		Path remappedPath = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
 		// if remapping did not happen, nothing can be done here
 		if (remappedPath == null) {
 			MiscHelper.panic("A remapped JAR for version %s does not exist", mcVersion.launcherFriendlyVersionName());

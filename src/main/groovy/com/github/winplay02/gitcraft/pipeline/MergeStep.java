@@ -16,36 +16,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-public class MergeStep extends Step {
+public abstract class MergeStep extends Step {
 
-	private final Path rootPath;
+	protected final Path rootPath;
 
-	public MergeStep(Path rootPath) {
+	protected MergeStep(Path rootPath) {
 		this.rootPath = rootPath;
 	}
 
-	public MergeStep() {
-		this(GitCraftPaths.MC_VERSION_STORE);
-	}
-
-	@Override
-	public String getName() {
-		return STEP_MERGE;
-	}
-
-	@Override
-	public boolean ignoresMappings() {
-		return true;
-	}
-
-	@Override
-	protected Path getInternalArtifactPath(OrderedVersion mcVersion, MappingFlavour _mappingFlavour) {
-		return this.rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve("merged-jar.jar");
-	}
+	protected abstract boolean shouldRun(OrderedVersion mcVersion);
 
 	@Override
 	public StepResult run(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour, MinecraftVersionGraph versionGraph, RepoWrapper repo) throws IOException {
-		// TODO do not run for (ancient) versions, where this does not make sense
+		if (!shouldRun(mcVersion)) {
+			return StepResult.NOT_RUN;
+		}
 		Path mergedPath = getInternalArtifactPath(mcVersion, mappingFlavour);
 		if (Files.exists(mergedPath)) {
 			return StepResult.UP_TO_DATE;
@@ -56,24 +41,36 @@ public class MergeStep extends Step {
 			MiscHelper.panic("Artifacts (client jar, server jar) for version %s do not exist", mcVersion.launcherFriendlyVersionName());
 		}
 
-		Path client = mcVersion.clientJar().resolve(artifactRootPath);
-		Path server2merge = mcVersion.serverJar().resolve(artifactRootPath);
-		BundleMetadata sbm = BundleMetadata.fromJar(server2merge);
-		if (sbm != null) {
-			Path minecraftExtractedServerJar = GitCraftPaths.MC_VERSION_STORE.resolve(mcVersion.launcherFriendlyVersionName()).resolve("extracted-server.jar");
+		if (mcVersion.hasClientCode() && mcVersion.hasServerCode()) {
+			Path client = mcVersion.clientJar().resolve(artifactRootPath);
+			Path server = mcVersion.serverJar().resolve(artifactRootPath);
+			BundleMetadata sbm = BundleMetadata.fromJar(server);
+			if (sbm != null) {
+				Path minecraftExtractedServerJar = GitCraftPaths.MC_VERSION_STORE.resolve(mcVersion.launcherFriendlyVersionName()).resolve("extracted-server.jar");
 
-			if (sbm.versions().size() != 1) {
-				throw new UnsupportedOperationException("Expected only 1 version in META-INF/versions.list, but got %d".formatted(sbm.versions().size()));
+				if (sbm.versions().size() != 1) {
+					throw new UnsupportedOperationException("Expected only 1 version in META-INF/versions.list, but got %d".formatted(sbm.versions().size()));
+				}
+
+				unpackJarEntry(sbm.versions().get(0), server, minecraftExtractedServerJar);
+				server = minecraftExtractedServerJar;
 			}
 
-			unpackJarEntry(sbm.versions().get(0), server2merge, minecraftExtractedServerJar);
-			server2merge = minecraftExtractedServerJar;
+			try (JarMerger jarMerger = new JarMerger(client.toFile(), server.toFile(), mergedPath.toFile())) {
+				jarMerger.enableSyntheticParamsOffset();
+				jarMerger.merge();
+			}
+		} else {
+			// a bit of a hack, but it makes it so there's a file path you can rely on existing
+			// for steps after remapping (nesting, unpick, decompiling, etc.)
+			if (mcVersion.hasClientCode()) {
+				Files.copy(mcVersion.clientJar().resolve(artifactRootPath), mergedPath);
+			}
+			if (mcVersion.hasServerCode()) {
+				Files.copy(mcVersion.serverJar().resolve(artifactRootPath), mergedPath);
+			}
 		}
-
-		try (JarMerger jarMerger = new JarMerger(client.toFile(), server2merge.toFile(), mergedPath.toFile())) {
-			jarMerger.enableSyntheticParamsOffset();
-			jarMerger.merge();
-		}
+		
 		return StepResult.SUCCESS;
 	}
 
