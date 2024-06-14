@@ -12,7 +12,9 @@ import com.github.winplay02.gitcraft.util.RepoWrapper;
 import com.github.winplay02.gitcraft.util.SerializationHelper;
 import net.fabricmc.loom.util.FileSystemUtil;
 import net.fabricmc.mappingio.MappingReader;
+import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.adapter.MappingDstNsReorder;
 import net.fabricmc.mappingio.adapter.MappingNsRenamer;
 import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
 import net.fabricmc.mappingio.format.MappingFormat;
@@ -149,21 +151,21 @@ public class ApplyNestsStep extends Step {
 		}
 		Path mappingsPath = mappings.get();
 		try {
-			if (side != Side.MERGED) {
-				mappingsPath = mappingsPath.resolve(".tmp");
+			mappingsPath = mappingsPath.resolve(".tmp");
 
-				MemoryMappingTree mappingTree = new MemoryMappingTree();
-				MappingSourceNsSwitch srcNsSwitch = new MappingSourceNsSwitch(mappingTree, "official");
-				MappingNsRenamer nsRenamer = new MappingNsRenamer(srcNsSwitch, Map.of(side == Side.CLIENT ? "clientOfficial" : "serverOfficial", "official"));
-				MappingReader.read(mappingsPath, nsRenamer);
-				try (MappingWriter writer = MappingWriter.create(mappingsPath, MappingFormat.TINY_2_FILE)) {
-					mappingTree.accept(writer);
-				}
+			MemoryMappingTree mappingTree = new MemoryMappingTree();
+			MappingVisitor visitor = new MappingDstNsReorder(mappingTree, mappingFlavour.getMappingImpl().getDestinationNS());
+			if (side != Side.MERGED) {
+				visitor = new MappingSourceNsSwitch(visitor, "official");
+				visitor = new MappingNsRenamer(visitor, Map.of(side == Side.CLIENT ? "clientOfficial" : "serverOfficial", "official"));
+			}
+			MappingReader.read(mappingsPath, visitor);
+			try (MappingWriter writer = MappingWriter.create(mappingsPath, MappingFormat.TINY_2_FILE)) {
+				mappingTree.accept(writer);
 			}
 			MappingUtils.mapNests(nestsFile, mappedNestsFile, Format.TINY_V2, mappingsPath);
-			if (side != Side.MERGED) {
-				Files.delete(mappingsPath);
-			}
+
+			Files.delete(mappingsPath);
 		} catch (IOException | RuntimeException e) {
 			throw new RuntimeException(e);
 		}
