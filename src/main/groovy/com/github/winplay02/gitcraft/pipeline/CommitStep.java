@@ -253,10 +253,18 @@ public class CommitStep extends Step {
 		}
 		try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(jar)) {
 			if (GitCraft.config.loadAssets) {
-				MiscHelper.copyLargeDir(fs.get().getPath("assets"), repo.getRootPath().resolve("minecraft").resolve("resources").resolve("assets"));
+				Path assetsPath = fs.get().getPath("assets");
+
+				if (assetsPath != null) {
+					MiscHelper.copyLargeDir(assetsPath, repo.getRootPath().resolve("minecraft").resolve("resources").resolve("assets"));
+				}
 			}
 			if (GitCraft.config.loadIntegratedDatapack) {
-				MiscHelper.copyLargeDir(fs.get().getPath("data"), repo.getRootPath().resolve("minecraft").resolve("resources").resolve("data"));
+				Path dataPath = fs.get().getPath("data");
+
+				if (dataPath != null) {
+					MiscHelper.copyLargeDir(dataPath, repo.getRootPath().resolve("minecraft").resolve("resources").resolve("data"));
+				}
 			}
 		}
 	}
