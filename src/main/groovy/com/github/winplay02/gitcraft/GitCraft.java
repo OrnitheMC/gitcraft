@@ -28,10 +28,10 @@ public class GitCraft {
 	/// Every Mapping
 	public static final MojangMappings MOJANG_MAPPINGS = new MojangMappings();
 	public static final FabricIntermediaryMappings FABRIC_INTERMEDIARY_MAPPINGS = new FabricIntermediaryMappings();
-	public static final OrnitheCalamusMappings ORNITHE_CALAMUS = new OrnitheCalamusMappings();
+	public static final OrnitheCalamusMappings ORNITHE_CALAMUS_MAPPINGS = new OrnitheCalamusMappings();
 	public static final Mapping YARN_MAPPINGS = new YarnMappings(FABRIC_INTERMEDIARY_MAPPINGS);
 	public static final Mapping MOJANG_PARCHMENT_MAPPINGS = new ParchmentMappings(MOJANG_MAPPINGS);
-	public static final Mapping FEATHER_MAPPINGS = new FeatherMappings(ORNITHE_CALAMUS);
+	public static final Mapping FEATHER_MAPPINGS = new FeatherMappings(ORNITHE_CALAMUS_MAPPINGS);
     /// Every Step
 	public static Step STEP_RESET = null;
 	public static Step STEP_FETCH_ARTIFACTS = null;
