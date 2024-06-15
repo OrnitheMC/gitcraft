@@ -1,8 +1,5 @@
 package com.github.winplay02.gitcraft;
 
-import com.github.winplay02.gitcraft.manifest.ManifestProvider;
-import com.github.winplay02.gitcraft.manifest.MinecraftLauncherManifest;
-import com.github.winplay02.gitcraft.manifest.SkyrisingManifest;
 import com.github.winplay02.gitcraft.mappings.*;
 import com.github.winplay02.gitcraft.pipeline.CommitStep;
 import com.github.winplay02.gitcraft.pipeline.DatagenStep;
@@ -23,7 +20,6 @@ import com.github.winplay02.gitcraft.util.MiscHelper;
 import com.github.winplay02.gitcraft.util.RepoWrapper;
 import com.github.winplay02.gitcraft.pipeline.ApplyNestsStep;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,17 +32,6 @@ public class GitCraft {
 	public static final Mapping YARN_MAPPINGS = new YarnMappings(FABRIC_INTERMEDIARY_MAPPINGS);
 	public static final Mapping MOJANG_PARCHMENT_MAPPINGS = new ParchmentMappings(MOJANG_MAPPINGS);
 	public static final Mapping FEATHER_MAPPINGS = new FeatherMappings(ORNITHE_CALAMUS);
-	/// Every ManifestProvider
-	public static final ManifestProvider MINECRAFT_LAUNCHER;
-	public static final ManifestProvider SKYRISING;
-	static {
-		try {
-			MINECRAFT_LAUNCHER = new MinecraftLauncherManifest();
-			SKYRISING = new SkyrisingManifest();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
     /// Every Step
 	public static Step STEP_RESET = null;
 	public static Step STEP_FETCH_ARTIFACTS = null;
@@ -77,6 +62,7 @@ public class GitCraft {
 		if (GitCraft.config == null) {
 			return;
 		}
+		GitCraft.config.manifest.init();
 		MiscHelper.checkFabricLoaderVersion();
 		MiscHelper.println("If generated semver is incorrect, it will break the order of the generated repo.\nConsider updating Fabric Loader. (run ./gradlew run --refresh-dependencies)");
 		GitCraft.versionGraph = MinecraftVersionGraph.createFromMetadata(GitCraft.config.manifest.getManifestProvider());

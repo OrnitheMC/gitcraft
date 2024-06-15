@@ -11,14 +11,13 @@ import net.fabricmc.loader.api.VersionParsingException;
 import net.fabricmc.loader.impl.game.minecraft.McVersion;
 import net.fabricmc.loader.impl.game.minecraft.McVersionLookup;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 public class SkyrisingManifest extends ManifestProvider {
-	public SkyrisingManifest() throws IOException {
+	public SkyrisingManifest() {
 		super(new DescribedURL[]{new DescribedURL("https://skyrising.github.io/mc-versions/version_manifest.json", "Launcher Meta")});
 	}
 

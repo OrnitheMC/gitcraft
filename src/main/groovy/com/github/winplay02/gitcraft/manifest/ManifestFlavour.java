@@ -1,17 +1,23 @@
 package com.github.winplay02.gitcraft.manifest;
 
-import com.github.winplay02.gitcraft.GitCraft;
-
 import java.util.Locale;
+import java.util.concurrent.Callable;
 
 public enum ManifestFlavour {
-	MINECRAFT_LAUNCHER(GitCraft.MINECRAFT_LAUNCHER),
-	SKYRISING(GitCraft.SKYRISING);
+	MINECRAFT_LAUNCHER(MinecraftLauncherManifest::new),
+	SKYRISING(SkyrisingManifest::new);
 
-	private final ManifestProvider manifestProvider;
+	private final Callable<ManifestProvider> manifestProviderSupplier;
+	private ManifestProvider manifestProvider;
 
-	ManifestFlavour(ManifestProvider manifestProvider) {
-		this.manifestProvider = manifestProvider;
+	ManifestFlavour(Callable<ManifestProvider> manifestProviderSupplier) {
+		this.manifestProviderSupplier = manifestProviderSupplier;
+	}
+
+	public void init() throws Exception {
+		if (this.manifestProvider == null) {
+			this.manifestProvider = this.manifestProviderSupplier.call();
+		}
 	}
 
 	public ManifestProvider getManifestProvider() {
