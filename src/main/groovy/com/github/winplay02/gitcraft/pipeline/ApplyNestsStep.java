@@ -69,6 +69,9 @@ public class ApplyNestsStep extends Step {
 		}
 
 		Path input = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
+		if (input == null) {
+			input = pipelineCache.getForKey(Step.STEP_REMAP);
+		}
 		Optional<Path> nestsPath = getNestsPath(mcVersion, mappingFlavour);
 
 		if (nestsPath.isPresent()) {
