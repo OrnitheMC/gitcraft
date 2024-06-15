@@ -122,7 +122,7 @@ public class MinecraftVersionGraph implements Iterable<OrderedVersion> {
 	public static MinecraftVersionGraph createFromMetadata(ManifestProvider provider) throws IOException {
 		MinecraftVersionGraph graph = new MinecraftVersionGraph();
 		TreeSet<OrderedVersion> metaVersions = new TreeSet<>(provider.getVersionMeta().values());
-		TreeSet<OrderedVersion> metaVersionsMainline = new TreeSet<>(metaVersions.stream().filter(value -> !MinecraftVersionGraph.isVersionNonLinearSnapshot(value)).toList());
+		TreeSet<OrderedVersion> metaVersionsMainline = new TreeSet<>(metaVersions.stream().filter(value -> value.hasClientCode() && value.hasServerCode() && !MinecraftVersionGraph.isVersionNonLinearSnapshot(value)).toList());
 		Map<String, OrderedVersion> semverMetaVersions = metaVersions.stream().collect(Collectors.toMap(OrderedVersion::semanticVersion, Function.identity()));
 		for (OrderedVersion version : metaVersions) {
 			graph.edgesFw.computeIfAbsent(version, value -> new TreeSet<>());
