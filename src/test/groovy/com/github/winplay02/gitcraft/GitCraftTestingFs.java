@@ -16,13 +16,12 @@ public class GitCraftTestingFs implements BeforeAllCallback, ExtensionContext.St
 	@Override
 	public void beforeAll(ExtensionContext extensionContext) throws Exception {
 		if (temporaryTestingFsPath == null) {
+			GitCraft.config = new GitCraftConfig();
 			temporaryTestingFsPath = Files.createTempDirectory("gitcraft");
 			//temporaryTestingFs = FileSystemUtil.getJarFileSystem(temporaryTestingFsPath.resolve("testingfs.jar"), true);
 			//GitCraftPaths.initializePaths(temporaryTestingFs.getPath("."));
 			GitCraftPaths.initializePaths(temporaryTestingFsPath);
 			extensionContext.getRoot().getStore(ExtensionContext.Namespace.GLOBAL).put("GitCraftTestingFs", this);
-
-			GitCraft.config = new GitCraftConfig();
 		}
 	}
 
