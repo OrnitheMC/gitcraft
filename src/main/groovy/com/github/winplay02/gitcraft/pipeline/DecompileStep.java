@@ -68,6 +68,9 @@ public class DecompileStep extends Step {
 		if (remappedPath == null) {
 			// if no unpicking happened, use remapped
 			remappedPath = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
+			if (remappedPath == null) {
+				remappedPath = pipelineCache.getForKey(Step.STEP_REMAP);
+			}
 
 			if (mappingFlavour == MappingFlavour.FEATHER || mappingFlavour == MappingFlavour.CALAMUS) {
 				remappedPath = pipelineCache.getForKey(Step.STEP_APPLY_NESTS);
