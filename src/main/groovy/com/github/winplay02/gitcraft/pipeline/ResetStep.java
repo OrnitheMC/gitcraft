@@ -38,6 +38,7 @@ public class ResetStep extends Step {
 	public StepResult run(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour, MinecraftVersionGraph versionGraph, RepoWrapper repo) throws Exception {
 		if (GitCraft.resetVersionGraph.containsVersion(mcVersion)) { // only reset version artifacts of versions which are specified
 			Path remappedPath = GitCraft.STEP_REMAP.getInternalArtifactPath(mcVersion, mappingFlavour);
+			Path nestedPath = GitCraft.STEP_APPLY_NESTS.getInternalArtifactPath(mcVersion, mappingFlavour);
 			Path unpickedPath = GitCraft.STEP_UNPICK.getInternalArtifactPath(mcVersion, mappingFlavour);
 			Path decompiledPath = GitCraft.STEP_DECOMPILE.getInternalArtifactPath(mcVersion, mappingFlavour);
 			// Datagen does not really need to be reset; The results should never change
@@ -53,8 +54,24 @@ public class ResetStep extends Step {
 				MiscHelper.println("%s (%s, %s, datagen registry reports) has been deleted", datagenReportsPath, mcVersion.launcherFriendlyVersionName(), mappingFlavour);
 			}*/
 			if (Files.exists(remappedPath)) {
+				Path client = mcVersion.clientJar().resolve(remappedPath);
+				Path server = mcVersion.serverJar().resolve(remappedPath);
+				Path merged = GitCraft.STEP_MERGE_MAPPED.getInternalArtifactPath(mcVersion, mappingFlavour);
+				if (Files.exists(client)) {
+					Files.delete(client);
+				}
+				if (Files.exists(server)) {
+					Files.delete(server);
+				}
+				if (Files.exists(merged)) {
+					Files.delete(merged);
+				}
 				Files.delete(remappedPath);
 				MiscHelper.println("%s (%s, %s, remapped) has been deleted", remappedPath, mcVersion.launcherFriendlyVersionName(), mappingFlavour);
+			}
+			if (Files.exists(nestedPath)) {
+				Files.delete(nestedPath);
+				MiscHelper.println("%s (%s, %s, nested) has been deleted", nestedPath, mcVersion.launcherFriendlyVersionName(), mappingFlavour);
 			}
 			if (Files.exists(unpickedPath)) {
 				Files.delete(unpickedPath);
