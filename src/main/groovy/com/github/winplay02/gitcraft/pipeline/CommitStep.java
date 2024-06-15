@@ -255,14 +255,14 @@ public class CommitStep extends Step {
 			if (GitCraft.config.loadAssets) {
 				Path assetsPath = fs.get().getPath("assets");
 
-				if (assetsPath != null) {
+				if (Files.exists(assetsPath)) {
 					MiscHelper.copyLargeDir(assetsPath, repo.getRootPath().resolve("minecraft").resolve("resources").resolve("assets"));
 				}
 			}
 			if (GitCraft.config.loadIntegratedDatapack) {
 				Path dataPath = fs.get().getPath("data");
 
-				if (dataPath != null) {
+				if (Files.exists(dataPath)) {
 					MiscHelper.copyLargeDir(dataPath, repo.getRootPath().resolve("minecraft").resolve("resources").resolve("data"));
 				}
 			}
