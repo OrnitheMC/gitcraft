@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class UnpickStep extends Step {
 
@@ -53,6 +52,9 @@ public class UnpickStep extends Step {
 		}
 		Path libraryRoot = pipelineCache.getForKey(Step.STEP_FETCH_LIBRARIES);
 		Path remappedPath = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
+		if (remappedPath == null) {
+			remappedPath = pipelineCache.getForKey(Step.STEP_REMAP);
+		}
 		// if remapping did not happen, nothing can be done here
 		if (remappedPath == null) {
 			MiscHelper.panic("A remapped JAR for version %s does not exist", mcVersion.launcherFriendlyVersionName());
