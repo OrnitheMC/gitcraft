@@ -91,7 +91,7 @@ public class ApplyNestsStep extends Step {
 	private Optional<Path> getNestsPath(OrderedVersion mcVersion, MappingFlavour mappingFlavour) throws Exception {
 		if (mcVersion.compareTo(GitCraftConfig.FIRST_MERGEABLE_VERSION) >= 0) {
 			OrnitheNestsVersionMeta nestsBuild = getLatestNestsBuild(mcVersion, Side.MERGED);
-			return Optional.of(prepareNests(nestsBuild, mcVersion, Side.MERGED, mappingFlavour));
+			return Optional.ofNullable(prepareNests(nestsBuild, mcVersion, Side.MERGED, mappingFlavour));
 		} else {
 			OrnitheNestsVersionMeta clientNestsBuild = getLatestNestsBuild(mcVersion, Side.CLIENT);
 			OrnitheNestsVersionMeta serverNestsBuild = getLatestNestsBuild(mcVersion, Side.SERVER);
