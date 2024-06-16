@@ -118,7 +118,7 @@ public record OrderedVersion(
 	}
 
 	public String timestamp() {
-		return this.versionMeta().time();
+		return this.versionMeta().releaseTime();
 	}
 
 	public String assetsIndexId() {
