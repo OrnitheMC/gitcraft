@@ -6,7 +6,9 @@ import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.GitCraftPaths;
 import com.github.winplay02.gitcraft.util.RemoteHelper;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
+import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.adapter.MappingNsCompleter;
 import net.fabricmc.mappingio.format.MappingFormat;
 import net.fabricmc.mappingio.format.tiny.Tiny1FileReader;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 public class OrnitheCalamusMappings extends Mapping {
 	@Override
@@ -44,6 +47,10 @@ public class OrnitheCalamusMappings extends Mapping {
 		Path mappingsV1 = getMappingsPathInternalV1(mcVersion);
 		Step.StepResult downloadResult = RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetryGitHub("OrnitheMC/calamus", "gen%d".formatted(GitCraftConfig.ORNITHE_INTERMEDIARY_GEN), String.format("mappings/%s.tiny", mcVersion.launcherFriendlyVersionName()), new RemoteHelper.LocalFileInfo(mappingsV1, null, "intermediary mapping", mcVersion.launcherFriendlyVersionName()));
 		MemoryMappingTree mappingTree = new MemoryMappingTree();
+		MappingVisitor visitor = mappingTree;
+		if (mcVersion.compareTo(GitCraftConfig.FIRST_MERGEABLE_VERSION) < 0) {
+			visitor = new MappingNsCompleter(visitor, Map.of(MappingsNamespace.CLIENT_OFFICIAL.toString(), MappingsNamespace.INTERMEDIARY.toString(), MappingsNamespace.SERVER_OFFICIAL.toString(), MappingsNamespace.INTERMEDIARY.toString()));
+		}
 		try (BufferedReader br = Files.newBufferedReader(mappingsV1, StandardCharsets.UTF_8)) {
 			Tiny1FileReader.read(br, mappingTree);
 		}

@@ -10,12 +10,19 @@ import com.github.winplay02.gitcraft.util.RemoteHelper;
 import com.github.winplay02.gitcraft.util.SerializationHelper;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
 import net.fabricmc.loom.util.FileSystemUtil;
+import net.fabricmc.mappingio.MappingVisitor;
+import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.adapter.MappingNsCompleter;
+import net.fabricmc.mappingio.format.MappingFormat;
+import net.fabricmc.mappingio.format.tiny.Tiny1FileReader;
+import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -79,7 +86,17 @@ public class FeatherMappings extends Mapping {
 			Step.StepResult result = RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetryMaven(featherVersion.makeMavenURLMergedV2(), new RemoteHelper.LocalFileInfo(mappingsFileJar, null, "feather mapping", mcVersion.launcherFriendlyVersionName()));
 			try (FileSystemUtil.Delegate fs = FileSystemUtil.getJarFileSystem(mappingsFileJar)) {
 				Path mappingsPathInJar = fs.get().getPath("mappings", "mappings.tiny");
-				Files.copy(mappingsPathInJar, mappingsFile, StandardCopyOption.REPLACE_EXISTING);
+				MemoryMappingTree mappingTree = new MemoryMappingTree();
+				MappingVisitor visitor = mappingTree;
+				if (mcVersion.compareTo(GitCraftConfig.FIRST_MERGEABLE_VERSION) < 0) {
+					visitor = new MappingNsCompleter(visitor, Map.of(MappingsNamespace.CLIENT_OFFICIAL.toString(), MappingsNamespace.INTERMEDIARY.toString(), MappingsNamespace.SERVER_OFFICIAL.toString(), MappingsNamespace.INTERMEDIARY.toString()));
+				}
+				try (BufferedReader br = Files.newBufferedReader(mappingsPathInJar, StandardCharsets.UTF_8)) {
+					Tiny1FileReader.read(br, mappingTree);
+				}
+				try (MappingWriter w = MappingWriter.create(mappingsFile, MappingFormat.TINY_2_FILE)) {
+					mappingTree.accept(w);
+				}
 			}
 			return Step.StepResult.merge(result, Step.StepResult.SUCCESS);
 		} catch (IOException | RuntimeException e) {
