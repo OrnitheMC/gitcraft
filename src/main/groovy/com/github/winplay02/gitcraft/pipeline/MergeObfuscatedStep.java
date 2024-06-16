@@ -38,7 +38,7 @@ public class MergeObfuscatedStep extends MergeStep {
 
 	@Override
 	protected Path getInputServerJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
-		return mcVersion.clientJar().resolve(pipelineCache.getForKey(Step.STEP_FETCH_ARTIFACTS));
+		return mcVersion.serverJar().resolve(pipelineCache.getForKey(Step.STEP_FETCH_ARTIFACTS));
 	}
 
 	@Override
