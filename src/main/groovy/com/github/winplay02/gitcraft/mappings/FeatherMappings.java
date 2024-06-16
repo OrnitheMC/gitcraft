@@ -10,11 +10,6 @@ import com.github.winplay02.gitcraft.util.RemoteHelper;
 import com.github.winplay02.gitcraft.util.SerializationHelper;
 import net.fabricmc.loom.api.mappings.layered.MappingsNamespace;
 import net.fabricmc.loom.util.FileSystemUtil;
-import net.fabricmc.mappingio.MappingReader;
-import net.fabricmc.mappingio.MappingWriter;
-import net.fabricmc.mappingio.adapter.MappingDstNsReorder;
-import net.fabricmc.mappingio.format.MappingFormat;
-import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
 import java.io.IOException;
 import java.net.URL;
@@ -38,6 +33,16 @@ public class FeatherMappings extends Mapping {
 	@Override
 	public String getName() {
 		return "Feather";
+	}
+
+	@Override
+	public boolean supportsComments() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsConstantUnpicking() {
+		return true;
 	}
 
 	@Override
@@ -96,10 +101,6 @@ public class FeatherMappings extends Mapping {
 		return featherVersion;
 	}
 
-	public static Path getSimplifiedMappingsPath(OrderedVersion mcVersion) {
-		return mappingsPathFeatherSimplified(mcVersion);
-	}
-
 	public static void initFeatherVersions() {
 		if (featherVersions == null) {
 			try {
@@ -114,31 +115,5 @@ public class FeatherMappings extends Mapping {
 	public static OrnitheFeatherVersionMeta getFeatherLatestBuild(OrderedVersion mcVersion) {
 		initFeatherVersions();
 		return featherVersions.get(mcVersion.launcherFriendlyVersionName());
-	}
-
-	private static Path mappingsPathFeatherSimplified(OrderedVersion mcVersion) {
-		OrnitheFeatherVersionMeta featherVersion = getTargetFeatherBuild(mcVersion);
-		Path mappingsFile = GitCraftPaths.MAPPINGS.resolve(String.format("%s-feather-gen%d-build.%s.tiny", mcVersion.launcherFriendlyVersionName(), GitCraftConfig.ORNITHE_INTERMEDIARY_GEN, featherVersion.build()));
-
-		if (featherVersion == null) {
-			// MiscHelper.panic("Tried to use feather for version %s. Feather mappings do not exist for this version.", mcVersion.version);
-			MiscHelper.println("Tried to use feather gen%d for version %s. Feather mappings do not exist for this version in meta.ornithemc.net. Falling back to generated version...", GitCraftConfig.ORNITHE_INTERMEDIARY_GEN, mcVersion.launcherFriendlyVersionName());
-			featherVersion = new OrnitheFeatherVersionMeta(mcVersion.launcherFriendlyVersionName(), "+build.", 1, String.format("net.ornithemc:feather-gen%d:%s+build.%s:unknown-fallback", GitCraftConfig.ORNITHE_INTERMEDIARY_GEN, mcVersion.launcherFriendlyVersionName(), 1), String.format("%s+build.%s", mcVersion.launcherFriendlyVersionName(), 1), !mcVersion.isSnapshot());
-		}
-		Path mappingsSimplifiedFile = GitCraftPaths.MAPPINGS.resolve(String.format("%s-feather-gen%d-build.%s-simplified.tiny", mcVersion.launcherFriendlyVersionName(), GitCraftConfig.ORNITHE_INTERMEDIARY_GEN, featherVersion.build()));
-		if (mappingsSimplifiedFile.toFile().exists()) {
-			return mappingsSimplifiedFile;
-		}
-		MemoryMappingTree mappingTree = new MemoryMappingTree();
-		try {
-			MappingReader.read(mappingsFile, mappingTree);
-			try (MappingWriter writer = MappingWriter.create(mappingsSimplifiedFile, MappingFormat.TINY_2_FILE)) {
-				MappingDstNsReorder dstReorder = new MappingDstNsReorder(writer, List.of(MappingsNamespace.NAMED.toString()));
-				mappingTree.accept(dstReorder);
-			}
-			return mappingsSimplifiedFile;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 }
