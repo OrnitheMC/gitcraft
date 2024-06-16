@@ -14,7 +14,7 @@ import net.fabricmc.mappingio.MappingVisitor;
 import net.fabricmc.mappingio.MappingWriter;
 import net.fabricmc.mappingio.adapter.MappingNsCompleter;
 import net.fabricmc.mappingio.format.MappingFormat;
-import net.fabricmc.mappingio.format.tiny.Tiny1FileReader;
+import net.fabricmc.mappingio.format.tiny.Tiny2FileReader;
 import net.fabricmc.mappingio.tree.MemoryMappingTree;
 
 import java.io.BufferedReader;
@@ -92,7 +92,7 @@ public class FeatherMappings extends Mapping {
 					visitor = new MappingNsCompleter(visitor, Map.of(MappingsNamespace.CLIENT_OFFICIAL.toString(), MappingsNamespace.INTERMEDIARY.toString(), MappingsNamespace.SERVER_OFFICIAL.toString(), MappingsNamespace.INTERMEDIARY.toString()));
 				}
 				try (BufferedReader br = Files.newBufferedReader(mappingsPathInJar, StandardCharsets.UTF_8)) {
-					Tiny1FileReader.read(br, mappingTree);
+					Tiny2FileReader.read(br, mappingTree);
 				}
 				try (MappingWriter w = MappingWriter.create(mappingsFile, MappingFormat.TINY_2_FILE)) {
 					mappingTree.accept(w);
@@ -100,7 +100,7 @@ public class FeatherMappings extends Mapping {
 			}
 			return Step.StepResult.merge(result, Step.StepResult.SUCCESS);
 		} catch (IOException | RuntimeException e) {
-			throw new IOException("unable to find Feather gen %d mergedv2 mappings for Minecraft version %s".formatted(GitCraftConfig.ORNITHE_INTERMEDIARY_GEN, mcVersion), e);
+			throw new IOException("unable to find Feather gen %d mergedv2 mappings for Minecraft version %s".formatted(GitCraftConfig.ORNITHE_INTERMEDIARY_GEN, mcVersion.launcherFriendlyVersionName()), e);
 		}
 	}
 
