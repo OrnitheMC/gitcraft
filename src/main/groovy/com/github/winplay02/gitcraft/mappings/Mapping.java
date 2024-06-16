@@ -34,7 +34,7 @@ public abstract class Mapping {
 
 	public String getSourceNS(String env) {
 		return switch (env) {
-			case "merged" -> MappingsNamespace.OFFICIAL.toString();
+			case "merged" -> getSourceNS();
 			case "client" -> MappingsNamespace.CLIENT_OFFICIAL.toString();
 			case "server" -> MappingsNamespace.SERVER_OFFICIAL.toString();
 			default -> throw new RuntimeException("unknown env " + env);
@@ -79,7 +79,7 @@ public abstract class Mapping {
 	protected abstract Path getMappingsPathInternal(OrderedVersion mcVersion);
 
 	public final IMappingProvider getMappingsProvider(OrderedVersion mcVersion) {
-		return getMappingsProvider(mcVersion, "");
+		return getMappingsProvider(mcVersion, "merged");
 	}
 
 	public final IMappingProvider getMappingsProvider(OrderedVersion mcVersion, String env) {
