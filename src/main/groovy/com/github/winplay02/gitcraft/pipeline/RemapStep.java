@@ -82,7 +82,7 @@ public class RemapStep extends Step {
 				.rebuildSourceFilenames(true)
 				.invalidLvNamePattern(MC_LV_PATTERN)
 				.inferNameFromSameLvIndex(true)
-				.withMappings(mappingFlavour.getMappingImpl().getMappingsProvider(mcVersion))
+				.withMappings(mappingFlavour.getMappingImpl().getMappingsProvider(mcVersion, env))
 				.fixPackageAccess(true)
 				.threads(GitCraft.config.remappingThreads);
 		TinyRemapper remapper = remapperBuilder.build();

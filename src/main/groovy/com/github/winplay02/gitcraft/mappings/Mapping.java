@@ -32,6 +32,15 @@ public abstract class Mapping {
 		return MappingsNamespace.OFFICIAL.toString();
 	}
 
+	public String getSourceNS(String env) {
+		return switch (env) {
+			case "merged" -> MappingsNamespace.OFFICIAL.toString();
+			case "client" -> MappingsNamespace.CLIENT_OFFICIAL.toString();
+			case "server" -> MappingsNamespace.SERVER_OFFICIAL.toString();
+			default -> throw new RuntimeException("unknown env " + env);
+		};
+	}
+
 	public abstract String getDestinationNS();
 
 	public abstract boolean doMappingsExist(OrderedVersion mcVersion);
@@ -70,6 +79,10 @@ public abstract class Mapping {
 	protected abstract Path getMappingsPathInternal(OrderedVersion mcVersion);
 
 	public final IMappingProvider getMappingsProvider(OrderedVersion mcVersion) {
+		return getMappingsProvider(mcVersion, "");
+	}
+
+	public final IMappingProvider getMappingsProvider(OrderedVersion mcVersion, String env) {
 		if (!doMappingsExist(mcVersion)) {
 			MiscHelper.panic("Tried to use %s-mappings for version %s. These mappings do not exist for this version.", this, mcVersion.launcherFriendlyVersionName());
 		}
@@ -77,7 +90,7 @@ public abstract class Mapping {
 		if (mappingsPath.isEmpty() || !Files.exists(mappingsPath.orElseThrow())) {
 			MiscHelper.panic("An error occurred while getting mapping information for %s (version %s)", this, mcVersion.launcherFriendlyVersionName());
 		}
-		return TinyUtils.createTinyMappingProvider(mappingsPath.get(), getSourceNS(), getDestinationNS());
+		return TinyUtils.createTinyMappingProvider(mappingsPath.get(), getSourceNS(env), getDestinationNS());
 	}
 
 	protected static boolean validateMappings(Path mappingsTinyPath) {
