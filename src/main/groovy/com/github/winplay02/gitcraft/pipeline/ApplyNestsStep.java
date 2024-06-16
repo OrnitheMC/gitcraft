@@ -157,7 +157,7 @@ public class ApplyNestsStep extends Step {
 			MemoryMappingTree mappingTree = new MemoryMappingTree();
 			MappingVisitor visitor = new MappingDstNsReorder(mappingTree, mappingFlavour.getMappingImpl().getDestinationNS());
 			if (side != Side.MERGED) {
-				visitor = new MappingSourceNsSwitch(visitor, "official");
+				visitor = new MappingSourceNsSwitch(visitor, "official", true);
 				visitor = new MappingNsRenamer(visitor, Map.of(side == Side.CLIENT ? "clientOfficial" : "serverOfficial", "official"));
 			}
 			MappingReader.read(mappingsPath, visitor);
