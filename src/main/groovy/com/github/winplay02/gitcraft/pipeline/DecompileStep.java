@@ -82,7 +82,10 @@ public class DecompileStep extends Step {
 		}
 		Path libraryPath = pipelineCache.getForKey(Step.STEP_FETCH_LIBRARIES);
 		if (libraryPath == null) {
-			MiscHelper.panic("Libraries for version %s do not exist", mcVersion.launcherFriendlyVersionName());
+			// server only versions have no libraries, this is not a problem
+			if (mcVersion.libraries().size() > 0) {
+				MiscHelper.panic("Libraries for version %s do not exist", mcVersion.launcherFriendlyVersionName());
+			}
 		}
 
 		// Adapted from loom-quiltflower by Juuxel
