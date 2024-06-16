@@ -162,7 +162,7 @@ public class ApplyNestsStep extends Step {
 			}
 			MappingReader.read(mappingsPath, visitor);
 
-			mappingsPath = mappingsPath.resolveSibling(".tmp");
+			mappingsPath = mappingsPath.resolveSibling("%s%s-%s.tmp.tiny".formatted(mcVersion.launcherFriendlyVersionName(), side.suffix(), mappingFlavour.toString()));
 
 			try (MappingWriter writer = MappingWriter.create(mappingsPath, MappingFormat.TINY_2_FILE)) {
 				mappingTree.accept(writer);
