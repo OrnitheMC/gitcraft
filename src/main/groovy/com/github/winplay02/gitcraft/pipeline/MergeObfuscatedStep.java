@@ -32,8 +32,13 @@ public class MergeObfuscatedStep extends MergeStep {
 	}
 
 	@Override
-	protected Path getInputDirectory(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
-		return pipelineCache.getForKey(Step.STEP_FETCH_ARTIFACTS);
+	protected Path getInputClientJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
+		return mcVersion.clientJar().resolve(pipelineCache.getForKey(Step.STEP_FETCH_ARTIFACTS));
+	}
+
+	@Override
+	protected Path getInputServerJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
+		return mcVersion.clientJar().resolve(pipelineCache.getForKey(Step.STEP_FETCH_ARTIFACTS));
 	}
 
 	@Override

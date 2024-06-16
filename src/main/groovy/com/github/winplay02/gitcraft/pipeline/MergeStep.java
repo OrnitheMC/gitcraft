@@ -4,7 +4,6 @@ import com.github.winplay02.gitcraft.MinecraftVersionGraph;
 import com.github.winplay02.gitcraft.mappings.MappingFlavour;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.GitCraftPaths;
-import com.github.winplay02.gitcraft.util.MiscHelper;
 import com.github.winplay02.gitcraft.util.RepoWrapper;
 import net.fabricmc.loom.configuration.providers.BundleMetadata;
 import net.fabricmc.loom.util.FileSystemUtil;
@@ -24,7 +23,9 @@ public abstract class MergeStep extends Step {
 		this.rootPath = rootPath;
 	}
 
-	protected abstract Path getInputDirectory(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour);
+	protected abstract Path getInputClientJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour);
+
+	protected abstract Path getInputServerJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour);
 
 	@Override
 	public StepResult run(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour, MinecraftVersionGraph versionGraph, RepoWrapper repo) throws IOException {
@@ -33,13 +34,8 @@ public abstract class MergeStep extends Step {
 			return StepResult.UP_TO_DATE;
 		}
 
-		Path inputDir = getInputDirectory(pipelineCache, mcVersion, mappingFlavour);
-		if (inputDir == null) {
-			MiscHelper.panic("Artifacts (client jar, server jar) for version %s do not exist", mcVersion.launcherFriendlyVersionName());
-		}
-
-		Path client = mcVersion.clientJar().resolve(inputDir);
-		Path server = mcVersion.serverJar().resolve(inputDir);
+		Path client = getInputClientJar(pipelineCache, mcVersion, mappingFlavour);
+		Path server = getInputServerJar(pipelineCache, mcVersion, mappingFlavour);
 		BundleMetadata sbm = BundleMetadata.fromJar(server);
 		if (sbm != null) {
 			Path minecraftExtractedServerJar = GitCraftPaths.MC_VERSION_STORE.resolve(mcVersion.launcherFriendlyVersionName()).resolve("extracted-server.jar");

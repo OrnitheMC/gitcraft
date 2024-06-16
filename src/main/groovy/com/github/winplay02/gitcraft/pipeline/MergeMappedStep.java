@@ -33,8 +33,13 @@ public class MergeMappedStep extends MergeStep {
 	}
 
 	@Override
-	protected Path getInputDirectory(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
-		return pipelineCache.getForKey(Step.STEP_REMAP);
+	protected Path getInputClientJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
+		return pipelineCache.getForKey(Step.STEP_REMAP).resolve("%s-client.jar".formatted(mappingFlavour.toString()));
+	}
+
+	@Override
+	protected Path getInputServerJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
+		return pipelineCache.getForKey(Step.STEP_REMAP).resolve("%s-server.jar".formatted(mappingFlavour.toString()));
 	}
 
 	@Override
@@ -46,7 +51,8 @@ public class MergeMappedStep extends MergeStep {
 				return super.run(pipelineCache, mcVersion, mappingFlavour, versionGraph, repo);
 			}
 
-			Path inputDir = getInputDirectory(pipelineCache, mcVersion, mappingFlavour);
+			Path clientPath = getInputClientJar(pipelineCache, mcVersion, mappingFlavour);
+			Path serverPath = getInputServerJar(pipelineCache, mcVersion, mappingFlavour);
 			Path mergedMappedPath = getInternalArtifactPath(mcVersion, mappingFlavour);
 
 			if (Files.exists(mergedMappedPath)) {
@@ -56,10 +62,10 @@ public class MergeMappedStep extends MergeStep {
 			// a bit of a hack, but it makes it so there's a file path you can rely on existing
 			// for steps after remapping (nesting, unpick, decompiling, etc.)
 			if (mcVersion.hasClientCode()) {
-				Files.copy(mcVersion.clientJar().resolve(inputDir), mergedMappedPath);
+				Files.copy(clientPath, mergedMappedPath);
 			}
 			if (mcVersion.hasServerCode()) {
-				Files.copy(mcVersion.serverJar().resolve(inputDir), mergedMappedPath);
+				Files.copy(serverPath, mergedMappedPath);
 			}
 
 			return StepResult.SUCCESS;
