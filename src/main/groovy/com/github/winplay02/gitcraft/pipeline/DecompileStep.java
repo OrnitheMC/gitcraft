@@ -66,14 +66,13 @@ public class DecompileStep extends Step {
 		}
 		Path remappedPath = pipelineCache.getForKey(Step.STEP_UNPICK);
 		if (remappedPath == null) {
-			// if no unpicking happened, use remapped
-			remappedPath = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
-			if (remappedPath == null) {
-				remappedPath = pipelineCache.getForKey(Step.STEP_REMAP);
-			}
-
 			if (mappingFlavour == MappingFlavour.FEATHER || mappingFlavour == MappingFlavour.CALAMUS) {
 				remappedPath = pipelineCache.getForKey(Step.STEP_APPLY_NESTS);
+			}
+			// if no unpicking or nesting happened, use remapped
+			remappedPath = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
+			if (remappedPath == null) {
+				remappedPath = RemapStep.getMappedJarPath(GitCraftPaths.REMAPPED, mcVersion, mappingFlavour, "merged");
 			}
 			// TODO if remapping did not happen, do something useful; Maybe decompile raw?
 			if (remappedPath == null) {

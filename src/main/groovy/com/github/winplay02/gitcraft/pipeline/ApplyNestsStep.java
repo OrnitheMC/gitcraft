@@ -70,7 +70,7 @@ public class ApplyNestsStep extends Step {
 
 		Path input = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
 		if (input == null) {
-			input = pipelineCache.getForKey(Step.STEP_REMAP);
+			input = RemapStep.getMappedJarPath(GitCraftPaths.REMAPPED, mcVersion, mappingFlavour, "merged");
 		}
 		Optional<Path> nestsPath = getNestsPath(mcVersion, mappingFlavour);
 

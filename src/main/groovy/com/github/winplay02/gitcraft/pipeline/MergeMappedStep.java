@@ -29,17 +29,17 @@ public class MergeMappedStep extends MergeStep {
 
 	@Override
 	protected Path getInternalArtifactPath(OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
-		return this.rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve(String.format("%s-merged.jar", mappingFlavour.toString()));
+		return RemapStep.getMappedJarPath(rootPath, mcVersion, mappingFlavour, "merged");
 	}
 
 	@Override
 	protected Path getInputClientJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
-		return pipelineCache.getForKey(Step.STEP_REMAP).resolve("%s-client.jar".formatted(mappingFlavour.toString()));
+		return RemapStep.getMappedJarPath(rootPath, mcVersion, mappingFlavour, "client");
 	}
 
 	@Override
 	protected Path getInputServerJar(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
-		return pipelineCache.getForKey(Step.STEP_REMAP).resolve("%s-server.jar".formatted(mappingFlavour.toString()));
+		return RemapStep.getMappedJarPath(rootPath, mcVersion, mappingFlavour, "server");
 	}
 
 	@Override

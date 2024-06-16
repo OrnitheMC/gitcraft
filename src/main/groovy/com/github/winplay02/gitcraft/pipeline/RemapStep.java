@@ -38,15 +38,17 @@ public class RemapStep extends Step {
 		return this.rootPath.resolve(String.format(mcVersion.launcherFriendlyVersionName()));
 	}
 
+	public static Path getMappedJarPath(Path rootPath, OrderedVersion mcVersion, MappingFlavour mappingFlavour, String env) {
+		return rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve("%s-%s.jar".formatted(mappingFlavour.toString(), env));
+	}
+
 	// From Fabric-loom
 	private static final Pattern MC_LV_PATTERN = Pattern.compile("\\$\\$\\d+");
 
 	@Override
 	public StepResult run(PipelineCache pipelineCache, OrderedVersion mcVersion, MappingFlavour mappingFlavour, MinecraftVersionGraph versionGraph, RepoWrapper repo) throws Exception {
-		Path rootPath = getInternalArtifactPath(mcVersion, mappingFlavour);
-
 		if (mcVersion.compareTo(GitCraftConfig.FIRST_MERGEABLE_VERSION) >= 0) {
-			Path remappedPath = rootPath.resolve("%s-merged.jar".formatted(mappingFlavour.toString()));
+			Path remappedPath = getMappedJarPath(rootPath, mcVersion, mappingFlavour, "merged");
 			Path mergedPath = pipelineCache.getForKey(Step.STEP_MERGE_OBFUSCATED);
 			return remap(mcVersion, "merged", mergedPath, remappedPath, mappingFlavour);
 		} else {
@@ -54,12 +56,12 @@ public class RemapStep extends Step {
 			StepResult serverResult = null;
 			Path artifactRootPath = pipelineCache.getForKey(Step.STEP_FETCH_ARTIFACTS);
 			if (mcVersion.hasClientCode()) {
-				Path remappedClientPath = rootPath.resolve("%s-client.jar".formatted(mappingFlavour.toString()));
+				Path remappedClientPath = getMappedJarPath(rootPath, mcVersion, mappingFlavour, "client");
 				Path clientPath = mcVersion.clientJar().resolve(artifactRootPath);
 				clientResult = remap(mcVersion, "client", clientPath, remappedClientPath, mappingFlavour);
 			}
 			if (mcVersion.hasServerCode()) {
-				Path remappedServerPath = rootPath.resolve("%s-server.jar".formatted(mappingFlavour.toString()));
+				Path remappedServerPath = getMappedJarPath(rootPath, mcVersion, mappingFlavour, "server");
 				Path serverPath = mcVersion.serverJar().resolve(artifactRootPath);
 				serverResult = remap(mcVersion, "server", serverPath, remappedServerPath, mappingFlavour);
 			}

@@ -32,7 +32,7 @@ public class UnpickStep extends Step {
 
 	@Override
 	protected Path getInternalArtifactPath(OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
-		return this.rootPath.resolve(String.format("%s-%s-unpicked.jar", mcVersion.launcherFriendlyVersionName(), mappingFlavour.toString()));
+		return this.rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve(String.format("%s-unpicked.jar", mappingFlavour.toString()));
 	}
 
 	@Override
@@ -53,7 +53,7 @@ public class UnpickStep extends Step {
 		Path libraryRoot = pipelineCache.getForKey(Step.STEP_FETCH_LIBRARIES);
 		Path remappedPath = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
 		if (remappedPath == null) {
-			remappedPath = pipelineCache.getForKey(Step.STEP_REMAP);
+			remappedPath = RemapStep.getMappedJarPath(GitCraftPaths.REMAPPED, mcVersion, mappingFlavour, "merged");
 		}
 		// if remapping did not happen, nothing can be done here
 		if (remappedPath == null) {
