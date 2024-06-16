@@ -154,8 +154,6 @@ public class ApplyNestsStep extends Step {
 		}
 		Path mappingsPath = mappings.get();
 		try {
-			mappingsPath = mappingsPath.resolve(".tmp");
-
 			MemoryMappingTree mappingTree = new MemoryMappingTree();
 			MappingVisitor visitor = new MappingDstNsReorder(mappingTree, mappingFlavour.getMappingImpl().getDestinationNS());
 			if (side != Side.MERGED) {
@@ -163,6 +161,9 @@ public class ApplyNestsStep extends Step {
 				visitor = new MappingNsRenamer(visitor, Map.of(side == Side.CLIENT ? "clientOfficial" : "serverOfficial", "official"));
 			}
 			MappingReader.read(mappingsPath, visitor);
+
+			mappingsPath = mappingsPath.resolve(".tmp");
+
 			try (MappingWriter writer = MappingWriter.create(mappingsPath, MappingFormat.TINY_2_FILE)) {
 				mappingTree.accept(writer);
 			}
