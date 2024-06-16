@@ -28,7 +28,7 @@ public class MergeObfuscatedStep extends MergeStep {
 
 	@Override
 	protected Path getInternalArtifactPath(OrderedVersion mcVersion, MappingFlavour _mappingFlavour) {
-		return this.rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve("merged-jar.jar");
+		return this.rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve("merged.jar");
 	}
 
 	@Override
