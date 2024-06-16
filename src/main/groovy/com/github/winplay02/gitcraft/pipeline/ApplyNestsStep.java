@@ -91,9 +91,6 @@ public class ApplyNestsStep extends Step {
 	private Optional<Path> getNestsPath(OrderedVersion mcVersion, MappingFlavour mappingFlavour) throws Exception {
 		if (mcVersion.compareTo(GitCraftConfig.FIRST_MERGEABLE_VERSION) >= 0) {
 			OrnitheNestsVersionMeta nestsBuild = getLatestNestsBuild(mcVersion, Side.MERGED);
-			if (nestsBuild == null) {
-				return Optional.empty();
-			}
 			return Optional.of(prepareNests(nestsBuild, mcVersion, Side.MERGED, mappingFlavour));
 		} else {
 			OrnitheNestsVersionMeta clientNestsBuild = getLatestNestsBuild(mcVersion, Side.CLIENT);
@@ -130,6 +127,9 @@ public class ApplyNestsStep extends Step {
 	}
 
 	private Path prepareNests(OrnitheNestsVersionMeta nestsMeta, OrderedVersion mcVersion, Side side, MappingFlavour mappingFlavour) {
+		if (nestsMeta == null) {
+			return null;
+		}
 		Path nestsFile = getNestsPath(nestsMeta);
 		if (Files.exists(nestsFile)) {
 			return nestsFile;
