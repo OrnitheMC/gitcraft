@@ -38,8 +38,8 @@ public class RemapStep extends Step {
 		return this.rootPath.resolve(String.format(mcVersion.launcherFriendlyVersionName()));
 	}
 
-	public static Path getMappedJarPath(Path rootPath, OrderedVersion mcVersion, MappingFlavour mappingFlavour, String env) {
-		return rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve("%s-%s.jar".formatted(mappingFlavour.toString(), env));
+	public static Path getMappedJarPath(Path rootPath, OrderedVersion mcVersion, MappingFlavour mappingFlavour, String kind) {
+		return rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve("%s-%s.jar".formatted(mappingFlavour.toString(), kind));
 	}
 
 	// From Fabric-loom

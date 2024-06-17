@@ -55,7 +55,7 @@ public class ApplyNestsStep extends Step {
 
 	@Override
 	public Path getInternalArtifactPath(OrderedVersion mcVersion, MappingFlavour mappingFlavour) {
-		return rootPath.resolve(mcVersion.launcherFriendlyVersionName()).resolve(String.format("%s-nested.jar", mappingFlavour.toString()));
+		return RemapStep.getMappedJarPath(rootPath, mcVersion, mappingFlavour, "nested");
 	}
 
 	@Override
@@ -70,13 +70,13 @@ public class ApplyNestsStep extends Step {
 
 		Path input = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
 		if (input == null) {
-			input = RemapStep.getMappedJarPath(GitCraftPaths.REMAPPED, mcVersion, mappingFlavour, "merged");
+			input = RemapStep.getMappedJarPath(rootPath, mcVersion, mappingFlavour, "merged");
 		}
 		Optional<Path> nestsPath = getNestsPath(mcVersion, mappingFlavour);
 
 		if (nestsPath.isPresent()) {
 			Nests nests = Nests.of(nestsPath.get());
-			Nester.nestJar(new net.ornithemc.nester.Nester.Options(), input, nestedPath, nests);
+			Nester.nestJar(new net.ornithemc.nester.Nester.Options().silent(true), input, nestedPath, nests);
 		} else {
 			Files.copy(input, nestedPath);
 		}
