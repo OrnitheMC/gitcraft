@@ -152,17 +152,21 @@ public abstract class ManifestProvider {
 		return Collections.unmodifiableMap(this.versionMeta);
 	}
 
-	protected final void unpackLauncherMeta(LauncherMeta launcherMeta) throws IOException {
+	protected void unpackLauncherMeta(LauncherMeta launcherMeta) throws IOException {
 		for (LauncherMeta.LauncherVersionEntry version : launcherMeta.versions()) {
-			Path versionMetaPath = this.rootPath.resolve(version.id() + ".json");
-			if (!versionMeta.containsKey(version.id())) {
-				versionMeta.put(version.id(), loadVersionData(versionMetaPath, version.id(), version.url(), version.sha1()));
+			unpackLauncherMetaEntry(version);
+		}
+	}
+
+	protected void unpackLauncherMetaEntry(LauncherMeta.LauncherVersionEntry version) throws IOException {
+		Path versionMetaPath = this.rootPath.resolve(version.id() + ".json");
+		if (!versionMeta.containsKey(version.id())) {
+			versionMeta.put(version.id(), loadVersionData(versionMetaPath, version.id(), version.url(), version.sha1()));
+		} else {
+			if (RemoteHelper.SHA1.fileMatchesChecksum(versionMetaPath, version.sha1())) {
+				MiscHelper.println("WARNING: Found duplicate version meta for version: %s (Matches previous entry)", version.id());
 			} else {
-				if (RemoteHelper.SHA1.fileMatchesChecksum(versionMetaPath, version.sha1())) {
-					MiscHelper.println("WARNING: Found duplicate version meta for version: %s (Matches previous entry)", version.id());
-				} else {
-					MiscHelper.panic("Found duplicate version meta for version: %s (Differs from previous)", version.id());
-				}
+				MiscHelper.panic("Found duplicate version meta for version: %s (Differs from previous)", version.id());
 			}
 		}
 	}
