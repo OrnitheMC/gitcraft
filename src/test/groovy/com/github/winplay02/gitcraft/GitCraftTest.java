@@ -36,7 +36,7 @@ public class GitCraftTest {
 
 	@Test
 	public void integrity() {
-		RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetryGitHub("WinPlay02/GitCraft", "master", "settings.gradle", new RemoteHelper.LocalFileInfo(GitCraftPaths.CURRENT_WORKING_DIRECTORY.resolve("settings.gradle"), null, "testing file", "settings"));
+		RemoteHelper.downloadToFileWithChecksumIfNotExistsNoRetryGitHub("OrnitheMC/gitcraft", "master", "settings.gradle", new RemoteHelper.LocalFileInfo(GitCraftPaths.CURRENT_WORKING_DIRECTORY.resolve("settings.gradle"), null, "testing file", "settings"));
 		assertTrue(RemoteHelper.SHA1.fileMatchesChecksum(GitCraftPaths.CURRENT_WORKING_DIRECTORY.resolve("settings.gradle"), "7c24c3faf018f76b636e9b7263added23beae48a"));
 	}
 
