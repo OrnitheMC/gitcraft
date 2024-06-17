@@ -2,6 +2,7 @@ package com.github.winplay02.gitcraft.manifest;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -32,7 +33,18 @@ public class SkyrisingManifest extends ManifestProvider {
 
 	@Override
 	protected void unpackLauncherMetaEntry(LauncherMeta.LauncherVersionEntry version) throws IOException {
+		// the server versions in classic and alpha can not be merged
+		// with the client versions at all, and thus have separate entries
+		// in the manifest
+		// it's somewhat arbitrary but we'll ignore those server versions
+		// in favor creating a full graph for the client for these ancient
+		// versions
+		if (version.id().startsWith("server-")) {
+			return;
+		}
+
 		Path versionDetailsPath = this.rootPath.resolve(version.id() + "-details.json");
+
 		if (!versionDetails.containsKey(version.id())) {
 			versionDetails.put(version.id(), loadVersionDetails(versionDetailsPath, version.id(), version.details()));
 		} else {
@@ -64,6 +76,21 @@ public class SkyrisingManifest extends ManifestProvider {
 
 	@Override
 	public List<String> getParentVersion(OrderedVersion mcVersion) {
-		return getVersionDetails(mcVersion.launcherFriendlyVersionName()).previous();
+		List<String> versions = new ArrayList<>();
+
+		for (String versionId : getVersionDetails(mcVersion.launcherFriendlyVersionName()).previous()) {
+			// Skyrising's manifest does not have a version with id rd-132211
+			// yet version rd-132211-launcher lists it as its previous version
+			if ("rd-132211".equals(versionId)) {
+				continue;
+			}
+			// see comment in unpackLauncherMetaEntry for why ancient server is ignored
+			if (versionId.startsWith("server-")) {
+				continue;
+			}
+			versions.add(getVersionDetails(versionId).normalizedVersion());
+		}
+
+		return versions;
 	}
 }
