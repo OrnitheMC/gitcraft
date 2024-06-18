@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Objects;
 
 import com.github.winplay02.gitcraft.meta.LauncherMeta;
 import com.github.winplay02.gitcraft.meta.VersionDetails;
@@ -76,21 +77,50 @@ public class SkyrisingManifest extends ManifestProvider {
 
 	@Override
 	public List<String> getParentVersion(OrderedVersion mcVersion) {
-		List<String> versions = new ArrayList<>();
+		List<String> parentVersions = new ArrayList<>();
 
-		for (String versionId : getVersionDetails(mcVersion.launcherFriendlyVersionName()).previous()) {
-			// Skyrising's manifest does not have a version with id rd-132211
-			// yet version rd-132211-launcher lists it as its previous version
-			if ("rd-132211".equals(versionId)) {
-				continue;
+		if (!patchParentVersions(mcVersion, parentVersions)) {
+			VersionDetails details = getVersionDetails(mcVersion.launcherFriendlyVersionName());
+
+			for (String parentVersion : details.previous()) {
+				// Skyrising's manifest does not have a version with id rd-132211
+				// yet version rd-132211-launcher lists it as its previous version
+				if ("rd-132211".equals(parentVersion)) {
+					continue;
+				}
+				// see comment in unpackLauncherMetaEntry for why ancient server is ignored
+				if (parentVersion.startsWith("server-")) {
+					continue;
+				}
+
+				VersionDetails parentDetails = getVersionDetails(parentVersion);
+				parentVersions.add(parentDetails.normalizedVersion());
 			}
-			// see comment in unpackLauncherMetaEntry for why ancient server is ignored
-			if (versionId.startsWith("server-")) {
-				continue;
-			}
-			versions.add(getVersionDetails(versionId).normalizedVersion());
 		}
 
-		return versions;
+		return parentVersions;
+	}
+
+	// hopefully this will be replaced by more sophisticated branching logic
+	// in the version graph and commit step
+	private boolean patchParentVersions(OrderedVersion mcVersion, List<String> parentVersions) {
+		String patchedParentVersion = switch (mcVersion.launcherFriendlyVersionName()) {
+			case "12w32a"          -> "1.3.2";  // 1.3.1
+			case "12w34a"          -> "12w32a"; // [1.3.2, 12w32a]
+			case "13w16-04192037"  -> "1.5.2";  // 1.5.1
+			case "13w36a-09051446" -> "1.6.4";  // 1.6.2-091847
+			case "14w02a"          -> "1.7.10"; // 1.7.4
+			case "15w31a"          -> "1.8.9";  // 1.8.8
+			default -> null;
+		};
+
+		if (patchedParentVersion == null) {
+			return false;
+		}
+
+		VersionDetails parentDetails = getVersionDetails(patchedParentVersion);
+		parentVersions.add(parentDetails.normalizedVersion());
+
+		return true;
 	}
 }
