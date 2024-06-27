@@ -5,7 +5,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Objects;
 
 import com.github.winplay02.gitcraft.meta.LauncherMeta;
 import com.github.winplay02.gitcraft.meta.VersionDetails;
@@ -41,6 +40,9 @@ public class SkyrisingManifest extends ManifestProvider {
 		// in favor creating a full graph for the client for these ancient
 		// versions
 		if (version.id().startsWith("server-")) {
+			return;
+		}
+		if (version.id().startsWith("b1.3")) {
 			return;
 		}
 
@@ -105,6 +107,7 @@ public class SkyrisingManifest extends ManifestProvider {
 	// in the version graph and commit step
 	private boolean patchParentVersions(OrderedVersion mcVersion, List<String> parentVersions) {
 		String patchedParentVersion = switch (mcVersion.launcherFriendlyVersionName()) {
+			case "b1.4-1507"       -> "b1.2_02";
 			case "12w32a"          -> "1.3.2";  // 1.3.1
 			case "12w34a"          -> "12w32a"; // [1.3.2, 12w32a]
 			case "13w16-04192037"  -> "1.5.2";  // 1.5.1
