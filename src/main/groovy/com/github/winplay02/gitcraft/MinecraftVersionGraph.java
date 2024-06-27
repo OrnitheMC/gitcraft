@@ -104,7 +104,7 @@ public class MinecraftVersionGraph implements Iterable<OrderedVersion> {
 
 	public static boolean isVersionNonLinearSnapshot(OrderedVersion mcVersion) {
 		// remove all pending "snapshots" from mainline and mark as non-linear
-		return mcVersion.isPending() || mcVersion.isSnapshotOrPending() && (Objects.equals(mcVersion.launcherFriendlyVersionName(), "15w14a") || !(LINEAR_SNAPSHOT_REGEX.matcher(mcVersion.launcherFriendlyVersionName()).matches())); // mark 15w14a explicit as april fools snapshot, since this case should not be covered by the regex
+		return mcVersion.isPending() || mcVersion.isSnapshotOrPending() && (Objects.equals(mcVersion.launcherFriendlyVersionName(), "15w14a") || !(Objects.equals(mcVersion.launcherFriendlyVersionName(), "1.0.0-rc2-3") || LINEAR_SNAPSHOT_REGEX.matcher(mcVersion.launcherFriendlyVersionName()).matches())); // mark 15w14a explicit as april fools snapshot, since this case should not be covered by the regex
 	}
 
 	public HashSet<String> repoTags = new HashSet<>();
