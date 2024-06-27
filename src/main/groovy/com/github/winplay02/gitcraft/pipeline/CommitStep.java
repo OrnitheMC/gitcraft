@@ -81,10 +81,10 @@ public class CommitStep extends Step {
 		}
 		// Commit
 		MiscHelper.executeTimedStep("Committing files to repo...", () -> createCommit(mcVersion, repo));
-		MiscHelper.println("Committed %s to the repository! (Target Branch is %s)", mcVersion.launcherFriendlyVersionName(), target_branch.orElseThrow() + (MinecraftVersionGraph.isVersionNonLinearSnapshot(mcVersion) ? " (non-linear)" : ""));
+		MiscHelper.println("Committed %s to the repository! (Target Branch is %s)", mcVersion.launcherFriendlyVersionName(), target_branch.orElseThrow() + (GitCraft.config.manifest.getManifestProvider().shouldExcludeFromMainBranch(mcVersion) ? " (non-linear)" : ""));
 
 		// Create branch for linear version
-		if (GitCraft.config.createVersionBranches && !MinecraftVersionGraph.isVersionNonLinearSnapshot(mcVersion)) {
+		if (GitCraft.config.createVersionBranches && !GitCraft.config.manifest.getManifestProvider().shouldExcludeFromMainBranch(mcVersion)) {
 			MiscHelper.executeTimedStep("Creating branch for linear version...", () -> createBranchFromCurrentCommit(mcVersion, repo));
 			MiscHelper.println("Created branch for linear version %s", mcVersion.launcherFriendlyVersionName());
 		}
@@ -111,7 +111,7 @@ public class CommitStep extends Step {
 	}
 
 	protected String getBranchNameForVersion(OrderedVersion mcVersion) {
-		return (MinecraftVersionGraph.isVersionNonLinearSnapshot(mcVersion) ? mcVersion.launcherFriendlyVersionName() : GitCraft.config.gitMainlineLinearBranch).replace(" ", "-");
+		return (GitCraft.config.manifest.getManifestProvider().shouldExcludeFromMainBranch(mcVersion) ? mcVersion.launcherFriendlyVersionName() : GitCraft.config.gitMainlineLinearBranch).replace(" ", "-");
 	}
 
 	private Optional<String> switchBranchIfNeeded(OrderedVersion mcVersion, MinecraftVersionGraph versionGraph, RepoWrapper repo) throws IOException, GitAPIException {

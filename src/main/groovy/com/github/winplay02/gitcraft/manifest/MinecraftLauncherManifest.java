@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class MinecraftLauncherManifest extends ManifestProvider {
 
@@ -268,5 +269,13 @@ public class MinecraftLauncherManifest extends ManifestProvider {
 				return null;
 			}
 		}
+	}
+
+	protected static final Pattern LINEAR_SNAPSHOT_REGEX = Pattern.compile("(^\\d\\dw\\d\\d[a-z]$)|(^\\d.\\d+(.\\d+)?(-(pre|rc)\\d+|_[a-z_\\-]+snapshot-\\d+| Pre-Release \\d+)?$)");
+
+	@Override
+	public boolean shouldExcludeFromMainBranch(OrderedVersion mcVersion) {
+		// remove all pending "snapshots" from mainline and mark as non-linear
+		return mcVersion.isPending() || mcVersion.isSnapshotOrPending() && (Objects.equals(mcVersion.launcherFriendlyVersionName(), "15w14a") || !(LINEAR_SNAPSHOT_REGEX.matcher(mcVersion.launcherFriendlyVersionName()).matches())); // mark 15w14a explicit as april fools snapshot, since this case should not be covered by the regex
 	}
 }

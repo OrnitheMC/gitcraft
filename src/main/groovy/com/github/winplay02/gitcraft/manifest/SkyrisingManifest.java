@@ -42,9 +42,6 @@ public class SkyrisingManifest extends ManifestProvider {
 		if (version.id().startsWith("server-")) {
 			return;
 		}
-		if (version.id().startsWith("b1.3")) {
-			return;
-		}
 
 		Path versionDetailsPath = this.rootPath.resolve(version.id() + "-details.json");
 
@@ -78,6 +75,14 @@ public class SkyrisingManifest extends ManifestProvider {
 	}
 
 	@Override
+	public boolean shouldExcludeFromMainBranch(OrderedVersion mcVersion) {
+		String versionId = mcVersion.launcherFriendlyVersionName();
+		// there is no b1.3 version with both client and server
+		// so we follow the client side only on the main branch
+		return "b1.3-17-1647".equals(versionId) || "b1.3-1731".equals(versionId); 
+	}
+
+	@Override
 	public List<String> getParentVersion(OrderedVersion mcVersion) {
 		List<String> parentVersions = new ArrayList<>();
 
@@ -107,7 +112,6 @@ public class SkyrisingManifest extends ManifestProvider {
 	// in the version graph and commit step
 	private boolean patchParentVersions(OrderedVersion mcVersion, List<String> parentVersions) {
 		String patchedParentVersion = switch (mcVersion.launcherFriendlyVersionName()) {
-			case "b1.4-1507"       -> "b1.2_02";
 			case "12w32a"          -> "1.3.2";  // 1.3.1
 			case "12w34a"          -> "12w32a"; // [1.3.2, 12w32a]
 			case "13w16-04192037"  -> "1.5.2";  // 1.5.1

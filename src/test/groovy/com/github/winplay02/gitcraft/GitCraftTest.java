@@ -69,7 +69,7 @@ public class GitCraftTest {
 		MinecraftVersionGraph minMaxVersionGraph = versionGraphComplete.filterMinVersion(versionGraphComplete.getMinecraftVersionByName("1.19")).filterMaxVersion(versionGraphComplete.getMinecraftVersionByName("1.19"));
 		assertEquals(1L, minMaxVersionGraph.stream().count());
 		MinecraftVersionGraph mainlineVersionGraph = versionGraphComplete.filterMainlineVersions();
-		assertFalse(mainlineVersionGraph.stream().anyMatch(MinecraftVersionGraph::isVersionNonLinearSnapshot));
+		assertFalse(mainlineVersionGraph.stream().anyMatch(metadataBootstrap::shouldExcludeFromMainBranch));
 	}
 
 	@Test

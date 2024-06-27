@@ -199,6 +199,8 @@ public abstract class ManifestProvider {
 		return OrderedVersion.from(meta, semver);
 	}
 
+	public abstract boolean shouldExcludeFromMainBranch(OrderedVersion mcVersion);
+
 	/**
 	 * Finds parent nodes to the provided version. Used to construct the {@link com.github.winplay02.gitcraft.MinecraftVersionGraph}.
 	 *

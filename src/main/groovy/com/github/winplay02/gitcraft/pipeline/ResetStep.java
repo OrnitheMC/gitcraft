@@ -105,10 +105,10 @@ public class ResetStep extends Step {
 		}
 		if (mcVersion.compareTo(GitCraft.resetVersionGraph.getRootVersion()) == 0) { // Min-Version reached
 			NavigableSet<OrderedVersion> previousVersions = versionGraph.getPreviousNodes(mcVersion);
-			if (previousVersions.isEmpty() || previousVersions.stream().allMatch(MinecraftVersionGraph::isVersionNonLinearSnapshot)) {
+			if (previousVersions.isEmpty() || previousVersions.stream().allMatch(GitCraft.config.manifest.getManifestProvider()::shouldExcludeFromMainBranch)) {
 				MiscHelper.panic("Previous mainline version for '%s' does not exist, but it is not a root node. This should never happen", mcVersion);
 			}
-			OrderedVersion newMainlineRoot = previousVersions.stream().filter(version -> !MinecraftVersionGraph.isVersionNonLinearSnapshot(version)).findFirst().orElseThrow();
+			OrderedVersion newMainlineRoot = previousVersions.stream().filter(version -> !GitCraft.config.manifest.getManifestProvider().shouldExcludeFromMainBranch(mcVersion)).findFirst().orElseThrow();
 			RevCommit commit = GitCraft.STEP_COMMIT.findVersionObjectRev(newMainlineRoot, repo);
 			resetRef(repo, GitCraft.config.gitMainlineLinearBranch, commit);
 		}

@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -100,13 +99,6 @@ public class MinecraftVersionGraph implements Iterable<OrderedVersion> {
 		}
 	}
 
-	protected static final Pattern LINEAR_SNAPSHOT_REGEX = Pattern.compile("(^\\d\\dw\\d\\d[a-z]$)|(^\\d.\\d+(.\\d+)?(-(pre|rc)\\d+|_[a-z_\\-]+snapshot-\\d+| Pre-Release \\d+)?$)");
-
-	public static boolean isVersionNonLinearSnapshot(OrderedVersion mcVersion) {
-		// remove all pending "snapshots" from mainline and mark as non-linear
-		return mcVersion.isPending() || mcVersion.isSnapshotOrPending() && (Objects.equals(mcVersion.launcherFriendlyVersionName(), "15w14a") || !(Objects.equals(mcVersion.launcherFriendlyVersionName(), "1.0.0-rc2-3") || LINEAR_SNAPSHOT_REGEX.matcher(mcVersion.launcherFriendlyVersionName()).matches())); // mark 15w14a explicit as april fools snapshot, since this case should not be covered by the regex
-	}
-
 	public HashSet<String> repoTags = new HashSet<>();
 	public HashMap<OrderedVersion, TreeSet<OrderedVersion>> edgesBack = new HashMap<>();
 	public HashMap<OrderedVersion, TreeSet<OrderedVersion>> edgesFw = new HashMap<>();
@@ -122,7 +114,7 @@ public class MinecraftVersionGraph implements Iterable<OrderedVersion> {
 	public static MinecraftVersionGraph createFromMetadata(ManifestProvider provider) throws IOException {
 		MinecraftVersionGraph graph = new MinecraftVersionGraph();
 		TreeSet<OrderedVersion> metaVersions = new TreeSet<>(provider.getVersionMeta().values());
-		TreeSet<OrderedVersion> metaVersionsMainline = new TreeSet<>(metaVersions.stream().filter(value -> !MinecraftVersionGraph.isVersionNonLinearSnapshot(value)).toList());
+		TreeSet<OrderedVersion> metaVersionsMainline = new TreeSet<>(metaVersions.stream().filter(value -> !provider.shouldExcludeFromMainBranch(value)).toList());
 		Map<String, OrderedVersion> semverMetaVersions = metaVersions.stream().collect(Collectors.toMap(OrderedVersion::semanticVersion, Function.identity()));
 		for (OrderedVersion version : metaVersions) {
 			graph.edgesFw.computeIfAbsent(version, value -> new TreeSet<>());
@@ -150,7 +142,7 @@ public class MinecraftVersionGraph implements Iterable<OrderedVersion> {
 	}
 
 	public MinecraftVersionGraph filterMainlineVersions() {
-		return new MinecraftVersionGraph(this, (entry -> !MinecraftVersionGraph.isVersionNonLinearSnapshot(entry)));
+		return new MinecraftVersionGraph(this, (entry -> !GitCraft.config.manifest.getManifestProvider().shouldExcludeFromMainBranch(entry)));
 	}
 
 	public MinecraftVersionGraph filterMinVersion(OrderedVersion version) {
