@@ -114,7 +114,7 @@ public class SkyrisingManifest extends ManifestProvider {
 		String patchedParentVersion = switch (mcVersion.launcherFriendlyVersionName()) {
 			case "12w32a"          -> "1.3.2";  // 1.3.1
 			case "12w34a"          -> "12w32a"; // [1.3.2, 12w32a]
-			case "13w16-04192037"  -> "1.5.2";  // 1.5.1
+			case "13w16a-04192037" -> "1.5.2";  // 1.5.1
 			case "13w36a-09051446" -> "1.6.4";  // 1.6.2-091847
 			case "14w02a"          -> "1.7.10"; // 1.7.4
 			case "15w31a"          -> "1.8.9";  // 1.8.8
