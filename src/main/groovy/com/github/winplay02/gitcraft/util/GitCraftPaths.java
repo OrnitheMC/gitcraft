@@ -21,6 +21,8 @@ public class GitCraftPaths {
 	public static Path MC_VERSION_META_DOWNLOADS = null;
 	public static Path LIBRARY_STORE = null;
 	public static Path REMAPPED = null;
+	public static Path RAVEN = null;
+	public static Path SPARROW = null;
 	public static Path NESTS = null;
 	public static Path ASSETS_INDEX = null;
 	public static Path ASSETS_OBJECTS = null;
@@ -46,6 +48,8 @@ public class GitCraftPaths {
 		MC_VERSION_META_DOWNLOADS = MAIN_ARTIFACT_STORE.resolve("mc-meta-download");
 		LIBRARY_STORE = MAIN_ARTIFACT_STORE.resolve("libraries");
 		REMAPPED = MAIN_ARTIFACT_STORE.resolve("remapped-mc");
+		RAVEN = MAIN_ARTIFACT_STORE.resolve("raven");
+		SPARROW = MAIN_ARTIFACT_STORE.resolve("sparrow");
 		NESTS = MAIN_ARTIFACT_STORE.resolve("nests");
 		ASSETS_INDEX = MAIN_ARTIFACT_STORE.resolve("assets-index");
 		ASSETS_OBJECTS = MAIN_ARTIFACT_STORE.resolve("assets-objects");
@@ -62,6 +66,8 @@ public class GitCraftPaths {
 		Files.createDirectories(MC_VERSION_META_DOWNLOADS);
 		Files.createDirectories(LIBRARY_STORE);
 		Files.createDirectories(REMAPPED);
+		Files.createDirectories(RAVEN);
+		Files.createDirectories(SPARROW);
 		Files.createDirectories(NESTS);
 		Files.createDirectories(ASSETS_INDEX);
 		Files.createDirectories(ASSETS_OBJECTS);

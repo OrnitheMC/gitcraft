@@ -46,6 +46,10 @@ public abstract class Step {
 
 	protected static final String STEP_MERGE_MAPPED = "Merge Mapped";
 
+	protected static final String STEP_APPLY_EXCEPTIONS = "Apply Exceptions";
+
+	protected static final String STEP_APPLY_SIGNATURES = "Apply Signatures";
+
 	protected static final String STEP_APPLY_NESTS = "Apply Nests";
 
 	protected static final String STEP_UNPICK = "Unpick";

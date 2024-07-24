@@ -68,7 +68,7 @@ public class ApplyNestsStep extends Step {
 			Files.delete(nestedPath);
 		}
 
-		Path input = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
+		Path input = pipelineCache.getForKey(Step.STEP_APPLY_SIGNATURES);
 		if (input == null) {
 			input = RemapStep.getMappedJarPath(rootPath, mcVersion, mappingFlavour, "merged");
 		}
@@ -77,11 +77,11 @@ public class ApplyNestsStep extends Step {
 		if (nestsPath.isPresent()) {
 			Nests nests = Nests.of(nestsPath.get());
 			Nester.nestJar(new net.ornithemc.nester.Nester.Options().silent(true), input, nestedPath, nests);
-		} else {
-			Files.copy(input, nestedPath);
-		}
 
-		return StepResult.SUCCESS;
+			return StepResult.SUCCESS;
+		} else {
+			return StepResult.NOT_RUN;
+		}
 	}
 
 	public static final String ORNITHE_NESTS_META = "https://meta.ornithemc.net/v3/versions/nests";

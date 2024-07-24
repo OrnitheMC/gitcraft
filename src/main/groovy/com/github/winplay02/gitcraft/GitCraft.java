@@ -42,6 +42,8 @@ public class GitCraft {
 	public static Step STEP_PREPARE_MAPPINGS = null;
 	public static Step STEP_REMAP = null;
 	public static Step STEP_MERGE_MAPPED = null;
+	public static Step STEP_APPLY_EXCEPTIONS = null;
+	public static Step STEP_APPLY_SIGNATURES = null;
 	public static Step STEP_APPLY_NESTS = null;
 	public static Step STEP_UNPICK = null;
 	public static Step STEP_DECOMPILE = null;
@@ -80,6 +82,8 @@ public class GitCraft {
 			DEFAULT_PIPELINE.add(STEP_PREPARE_MAPPINGS = new PrepareMappingsStep());
 			DEFAULT_PIPELINE.add(STEP_REMAP = new RemapStep());
 			DEFAULT_PIPELINE.add(STEP_MERGE_MAPPED = new MergeMappedStep());
+			DEFAULT_PIPELINE.add(STEP_APPLY_EXCEPTIONS = new ApplyExceptionsStep());
+			DEFAULT_PIPELINE.add(STEP_APPLY_SIGNATURES = new ApplySignaturesStep());
 			DEFAULT_PIPELINE.add(STEP_APPLY_NESTS = new ApplyNestsStep());
 			DEFAULT_PIPELINE.add(STEP_UNPICK = new UnpickStep());
 			DEFAULT_PIPELINE.add(STEP_DECOMPILE = new DecompileStep());

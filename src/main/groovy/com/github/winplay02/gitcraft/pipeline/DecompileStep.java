@@ -66,18 +66,23 @@ public class DecompileStep extends Step {
 		}
 		Path remappedPath = pipelineCache.getForKey(Step.STEP_UNPICK);
 		if (remappedPath == null) {
-			if (mappingFlavour == MappingFlavour.FEATHER || mappingFlavour == MappingFlavour.CALAMUS) {
-				remappedPath = pipelineCache.getForKey(Step.STEP_APPLY_NESTS);
-			}
-			// if no unpicking or nesting happened, use remapped
+			remappedPath = pipelineCache.getForKey(Step.STEP_APPLY_NESTS);
+		}
+		if (remappedPath == null) {
+			remappedPath = pipelineCache.getForKey(Step.STEP_APPLY_SIGNATURES);
+		}
+		if (remappedPath == null) {
+			remappedPath = pipelineCache.getForKey(Step.STEP_APPLY_EXCEPTIONS);
+		}
+		if (remappedPath == null) {
 			remappedPath = pipelineCache.getForKey(Step.STEP_MERGE_MAPPED);
-			if (remappedPath == null) {
-				remappedPath = RemapStep.getMappedJarPath(GitCraftPaths.REMAPPED, mcVersion, mappingFlavour, "merged");
-			}
-			// TODO if remapping did not happen, do something useful; Maybe decompile raw?
-			if (remappedPath == null) {
-				MiscHelper.panic("Both an unpicked JAR and a remapped JAR for version %s does not exist", mcVersion.launcherFriendlyVersionName());
-			}
+		}
+		if (remappedPath == null) {
+			remappedPath = RemapStep.getMappedJarPath(GitCraftPaths.REMAPPED, mcVersion, mappingFlavour, "merged");
+		}
+		// TODO if remapping did not happen, do something useful; Maybe decompile raw?
+		if (remappedPath == null) {
+			MiscHelper.panic("Both an unpicked JAR and a remapped JAR for version %s does not exist", mcVersion.launcherFriendlyVersionName());
 		}
 		Path libraryPath = pipelineCache.getForKey(Step.STEP_FETCH_LIBRARIES);
 		if (libraryPath == null) {

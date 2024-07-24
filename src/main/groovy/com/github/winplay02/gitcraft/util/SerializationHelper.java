@@ -3,6 +3,8 @@ package com.github.winplay02.gitcraft.util;
 import com.github.winplay02.gitcraft.meta.FabricYarnVersionMeta;
 import com.github.winplay02.gitcraft.meta.OrnitheFeatherVersionMeta;
 import com.github.winplay02.gitcraft.meta.OrnitheNestsVersionMeta;
+import com.github.winplay02.gitcraft.meta.OrnitheRavenVersionMeta;
+import com.github.winplay02.gitcraft.meta.OrnitheSparrowVersionMeta;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
@@ -28,6 +30,10 @@ public class SerializationHelper {
 	};
 	public static final TypeToken<ArrayList<FabricYarnVersionMeta>> TYPE_LIST_FABRIC_YARN_VERSION_META = new TypeToken<ArrayList<FabricYarnVersionMeta>>() {};
 	public static final TypeToken<ArrayList<OrnitheFeatherVersionMeta>> TYPE_LIST_ORNITHE_FEATHER_VERSION_META = new TypeToken<ArrayList<OrnitheFeatherVersionMeta>>() {
+	};
+	public static final TypeToken<ArrayList<OrnitheRavenVersionMeta>> TYPE_LIST_ORNITHE_RAVEN_VERSION_META = new TypeToken<ArrayList<OrnitheRavenVersionMeta>>() {
+	};
+	public static final TypeToken<ArrayList<OrnitheSparrowVersionMeta>> TYPE_LIST_ORNITHE_SPARROW_VERSION_META = new TypeToken<ArrayList<OrnitheSparrowVersionMeta>>() {
 	};
 	public static final TypeToken<ArrayList<OrnitheNestsVersionMeta>> TYPE_LIST_ORNITHE_NESTS_VERSION_META = new TypeToken<ArrayList<OrnitheNestsVersionMeta>>() {
 	};
