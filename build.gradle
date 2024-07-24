@@ -62,6 +62,8 @@ dependencies {
 	// Decompiler, could be replaced with another fernflower fork
 	implementation "org.vineflower:vineflower:${vineflower_version}"
 
+	implementation "net.ornithemc:exceptor:${exceptor_version}"
+	implementation "io.github.gaming32:signature-changer:${signature_changer_version}"
 	implementation "net.ornithemc:nester:${nester_version}"
 	implementation "net.ornithemc:mapping-utils:${mapping_utils_version}"
 
