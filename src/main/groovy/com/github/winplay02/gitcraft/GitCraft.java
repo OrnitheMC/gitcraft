@@ -18,7 +18,9 @@ import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.GitCraftPaths;
 import com.github.winplay02.gitcraft.util.MiscHelper;
 import com.github.winplay02.gitcraft.util.RepoWrapper;
+import com.github.winplay02.gitcraft.pipeline.ApplyExceptionsStep;
 import com.github.winplay02.gitcraft.pipeline.ApplyNestsStep;
+import com.github.winplay02.gitcraft.pipeline.ApplySignaturesStep;
 
 import java.util.ArrayList;
 import java.util.List;
