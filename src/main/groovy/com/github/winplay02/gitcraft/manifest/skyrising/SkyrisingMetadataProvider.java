@@ -48,12 +48,6 @@ public class SkyrisingMetadataProvider extends BaseMetadataProvider<SkyrisingMan
 	}
 
 	@Override
-	public boolean shouldLoadVersion(String versionId) {
-		// classic and alpha servers don't work well with the version graph right now
-		return !versionId.startsWith("server-") && super.shouldLoadVersion(versionId);
-	}
-
-	@Override
 	protected void postLoadVersions() {
 		this.versionDetails.keySet().removeIf(version -> this.getVersionByVersionID(version) == null);
 	}
@@ -62,6 +56,9 @@ public class SkyrisingMetadataProvider extends BaseMetadataProvider<SkyrisingMan
 	protected OrderedVersion loadVersionFromManifest(SkyrisingManifest.VersionEntry manifestEntry, Path targetDir) throws IOException {
 		VersionInfo info = this.fetchVersionMetadata(manifestEntry.id(), manifestEntry.url(), null, targetDir.resolve("info"), "version info", VersionInfo.class);
 		VersionDetails details = this.fetchVersionMetadata(manifestEntry.id(), manifestEntry.details(), null, targetDir.resolve("details"), "version details", VersionDetails.class);
+		if (info == null || details == null) {
+			return null;
+		}
 		this.versionDetails.put(details.id(), details);
 		return OrderedVersion.from(info, details.normalizedVersion());
 	}
@@ -118,6 +115,12 @@ public class SkyrisingMetadataProvider extends BaseMetadataProvider<SkyrisingMan
 	}
 
 	private static final Pattern NORMAL_SNAPSHOT_PATTERN = Pattern.compile("(^\\d\\dw\\d\\d[a-z](-\\d+)?$)|(^\\d.\\d+(.\\d+)?(-(pre|rc)((-\\d+|\\d+)(-\\d+)?)?|_[a-z_\\-]+snapshot-\\d+| Pre-Release \\d+)?$)");
+
+	@Override
+	public boolean shouldExclude(OrderedVersion mcVersion) {
+		// classic and alpha servers don't work well with the version graph right now
+		return super.shouldExclude(mcVersion) || mcVersion.launcherFriendlyVersionName().startsWith("server-");
+	}
 
 	@Override
 	public boolean shouldExcludeFromMainBranch(OrderedVersion mcVersion) {

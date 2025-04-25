@@ -195,6 +195,9 @@ public class MojangLauncherMetadataProvider extends BaseMetadataProvider<MojangL
 	@Override
 	protected OrderedVersion loadVersionFromManifest(MojangLauncherManifest.VersionEntry manifestEntry, Path targetDir) throws IOException {
 		VersionInfo info = this.fetchVersionMetadata(manifestEntry.id(), manifestEntry.url(), manifestEntry.sha1(), targetDir, "version info", VersionInfo.class);
+		if (info == null) {
+			return null;
+		}
 		String semanticVersion = this.lookupSemanticVersion(info);
 		return OrderedVersion.from(info, semanticVersion);
 	}

@@ -84,8 +84,9 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 			M manifest = this.fetchVersionsManifest(manifestSource);
 			for (E versionEntry : manifest.versions()) {
 				if (!this.versionsById.containsKey(versionEntry.id())) {
-					if (this.shouldLoadVersion(versionEntry.id())) {
-						this.versionsById.put(versionEntry.id(), this.loadVersionFromManifest(versionEntry, this.manifestMetadata));
+					OrderedVersion mcVersion = this.loadVersionFromManifest(versionEntry, this.manifestMetadata);
+					if (!this.shouldExclude(mcVersion)) {
+						this.versionsById.put(versionEntry.id(), mcVersion);
 					}
 				} else {
 					if (this.isExistingVersionMetadataValid(versionEntry, this.manifestMetadata)) {
@@ -100,8 +101,9 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 			MiscHelper.println("Reading extra metadata for %s...", metadataSource.versionEntry().id());
 			E versionEntry = metadataSource.versionEntry();
 			if (!this.versionsById.containsKey(versionEntry.id())) {
-				if (this.shouldLoadVersion(versionEntry.id())) {
-					this.versionsById.put(versionEntry.id(), this.loadVersionFromManifest(versionEntry, this.remoteMetadata));
+				OrderedVersion mcVersion = this.loadVersionFromManifest(versionEntry, this.remoteMetadata);
+				if (!this.shouldExclude(mcVersion)) {
+					this.versionsById.put(versionEntry.id(), mcVersion);
 				}
 			} else {
 				MiscHelper.panic("Found duplicate extra version entry: %s (Differs from previous)", versionEntry.id());
@@ -113,7 +115,7 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 			this.loadVersionsFromRepository(dir, mcVersion -> {
 				String versionId = mcVersion.launcherFriendlyVersionName();
 				if (!this.versionsById.containsKey(versionId)) {
-					if (this.shouldLoadVersion(versionId)) {
+					if (!this.shouldExclude(mcVersion)) {
 						this.versionsById.put(versionId, mcVersion);
 					}
 				} else {
@@ -122,13 +124,6 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 			});
 		}
 		this.versionsLoaded = true;
-	}
-
-	/**
-	 * @return whether this Minecraft version should be loaded or not
-	 */
-	protected boolean shouldLoadVersion(String versionId) {
-		return this.versionFilter.test(versionId);
 	}
 
 	protected void postLoadVersions() {
@@ -157,9 +152,19 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 	 */
 	protected abstract void loadVersionsFromRepository(Path dir, Consumer<OrderedVersion> loader) throws IOException;
 
+	/**
+	 * @return whether metadata for this Minecraft version should be fetched from remote sources if it does not exist locally
+	 */
+	protected boolean shouldFetchVersionMetadata(String versionId) {
+		return this.versionFilter.test(versionId);
+	}
+
 	protected final <T> T fetchVersionMetadata(String id, String url, String sha1, Path targetDir, String targetFileKind, Class<T> metadataClass) throws IOException {
 		String fileName = url.substring(url.lastIndexOf('/') + 1);
 		Path filePath = targetDir.resolve(fileName);
+		if (!Files.exists(filePath) && !this.shouldFetchVersionMetadata(id)) {
+			return null;
+		}
 		RemoteHelper.downloadToFileWithChecksumIfNotExists(url, new RemoteHelper.LocalFileInfo(filePath, sha1, targetFileKind, id), RemoteHelper.SHA1);
 		return this.loadVersionMetadata(filePath, metadataClass);
 	}
@@ -209,8 +214,13 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 	}
 
 	@Override
+	public boolean shouldExclude(OrderedVersion mcVersion) {
+		return mcVersion == null;
+	}
+
+	@Override
 	public boolean shouldExcludeFromMainBranch(OrderedVersion mcVersion) {
-		return mcVersion.isPending();
+		return mcVersion == null || mcVersion.isPending();
 	}
 
 	private static class VersionFilter implements Predicate<String> {
