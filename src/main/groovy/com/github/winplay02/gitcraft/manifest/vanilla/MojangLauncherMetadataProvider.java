@@ -7,8 +7,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.github.winplay02.gitcraft.manifest.BaseMetadataProvider;
 import com.github.winplay02.gitcraft.manifest.ManifestSource;
@@ -17,6 +19,7 @@ import com.github.winplay02.gitcraft.types.Artifact;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.GitCraftPaths;
 import com.github.winplay02.gitcraft.util.MiscHelper;
+import com.github.winplay02.gitcraft.util.SerializationHelper;
 
 import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.VersionParsingException;
@@ -137,10 +140,16 @@ public class MojangLauncherMetadataProvider extends BaseMetadataProvider<MojangL
 			"24w14potato_original",
 			"https://maven.fabricmc.net/net/minecraft/24w14potato_original.json",
 			"4e54c25e6eafdf0a2f1f6e86fb1b8c1d239dd8d5");
+
+		this.loadSemverCache();
 	}
 
 	private void addMetadataSource(String id, String url, String sha1) {
 		this.addMetadataSource(new MojangLauncherManifest.VersionEntry(id, url, sha1));
+	}
+
+	private Path getSemverCachePath() {
+		return GitCraftPaths.CURRENT_WORKING_DIRECTORY.resolve(String.format("semver-cache-%s.json", this.getInternalName()));
 	}
 
 	@Override
@@ -156,6 +165,31 @@ public class MojangLauncherMetadataProvider extends BaseMetadataProvider<MojangL
 	@Override
 	public String getInternalName() {
 		return "mojang-launcher";
+	}
+
+	private void loadSemverCache() {
+		Path cachePath = this.getSemverCachePath();
+		if (Files.exists(cachePath)) {
+			try {
+				this.semverCache.putAll(SerializationHelper.deserialize(SerializationHelper.fetchAllFromPath(cachePath), SerializationHelper.TYPE_TREE_MAP_STRING_STRING));
+			} catch (IOException e) {
+				MiscHelper.println("This is not a fatal error: %s", e);
+			}
+		}
+	}
+
+	private void writeSemverCache() {
+		Map<String, String> semverCache = new TreeMap<>(this.getVersions().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().semanticVersion())));
+		try {
+			SerializationHelper.writeAllToPath(this.getSemverCachePath(), SerializationHelper.serialize(semverCache));
+		} catch (IOException e) {
+			MiscHelper.println("This is not a fatal error: %s", e);
+		}
+	}
+
+	@Override
+	protected void postLoadVersions() {
+		this.writeSemverCache();
 	}
 
 	@Override

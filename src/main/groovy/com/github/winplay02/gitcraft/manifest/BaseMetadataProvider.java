@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E extends VersionsManifest.VersionEntry> implements MetadataProvider {
 	protected final Path manifestMetadata;
@@ -43,7 +42,6 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 		this.manifestSources = new ArrayList<>();
 		this.metadataSources = new ArrayList<>();
 		this.repositorySources = new ArrayList<>();
-		this.loadSemverCache();
 	}
 
 	protected void addManifestSource(String url, Class<M> manifestClass) {
@@ -58,28 +56,10 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 		this.repositorySources.add(MetadataSources.LocalRepository.of(this.localMetadata.resolve(directory)));
 	}
 
-	protected final Path getSemverCachePath() {
-		return GitCraftPaths.CURRENT_WORKING_DIRECTORY.resolve(String.format("semver-cache-%s.json", this.getInternalName()));
-	}
-
-	protected final void loadSemverCache() {
-		Path cachePath = this.getSemverCachePath();
-		if (Files.exists(cachePath)) {
-			try {
-				this.semverCache.putAll(SerializationHelper.deserialize(SerializationHelper.fetchAllFromPath(cachePath), SerializationHelper.TYPE_TREE_MAP_STRING_STRING));
-			} catch (IOException e) {
-				MiscHelper.println("This is not a fatal error: %s", e);
-			}
-		}
-	}
-
-	protected final void writeSemverCache() {
-		Map<String, String> semverCache = new TreeMap<>(this.versionsById.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().semanticVersion())));
-		try {
-			SerializationHelper.writeAllToPath(this.getSemverCachePath(), SerializationHelper.serialize(semverCache));
-		} catch (IOException e) {
-			MiscHelper.println("This is not a fatal error: %s", e);
-		}
+	@Override
+	public final void provide() throws IOException {
+		this.loadVersions();
+		this.postLoadVersions();
 	}
 
 	/**
