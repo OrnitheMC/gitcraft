@@ -83,8 +83,10 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 			MiscHelper.println("Reading versions manifest from %s...", manifestSource.url());
 			M manifest = this.fetchVersionsManifest(manifestSource);
 			for (E versionEntry : manifest.versions()) {
-				if (!this.versionsById.containsKey(versionEntry.id()) && this.shouldLoadVersion(versionEntry.id())) {
-					this.versionsById.put(versionEntry.id(), this.loadVersionFromManifest(versionEntry, this.manifestMetadata));
+				if (!this.versionsById.containsKey(versionEntry.id())) {
+					if (this.shouldLoadVersion(versionEntry.id())) {
+						this.versionsById.put(versionEntry.id(), this.loadVersionFromManifest(versionEntry, this.manifestMetadata));
+					}
 				} else {
 					if (this.isExistingVersionMetadataValid(versionEntry, this.manifestMetadata)) {
 						MiscHelper.println("WARNING: Found duplicate manifest version entry: %s (Matches previous entry)", versionEntry.id());
@@ -97,8 +99,10 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 		for (MetadataSources.RemoteMetadata<E> metadataSource : this.metadataSources) {
 			MiscHelper.println("Reading extra metadata for %s...", metadataSource.versionEntry().id());
 			E versionEntry = metadataSource.versionEntry();
-			if (!this.versionsById.containsKey(versionEntry.id()) && this.shouldLoadVersion(versionEntry.id())) {
-				this.versionsById.put(versionEntry.id(), this.loadVersionFromManifest(versionEntry, this.remoteMetadata));
+			if (!this.versionsById.containsKey(versionEntry.id())) {
+				if (this.shouldLoadVersion(versionEntry.id())) {
+					this.versionsById.put(versionEntry.id(), this.loadVersionFromManifest(versionEntry, this.remoteMetadata));
+				}
 			} else {
 				MiscHelper.panic("Found duplicate extra version entry: %s (Differs from previous)", versionEntry.id());
 			}
