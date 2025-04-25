@@ -7,6 +7,7 @@ import com.github.winplay02.gitcraft.util.MiscHelper;
 import com.github.winplay02.gitcraft.util.RemoteHelper;
 import com.github.winplay02.gitcraft.util.SerializationHelper;
 
+import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.impl.game.minecraft.McVersion;
 import net.fabricmc.loader.impl.game.minecraft.McVersionLookup;
 
@@ -250,12 +251,12 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 				McVersion version = this.findVersion(versionId, "provided");
 				if (version != null) {
 					if (this.minVersion != null) {
-						if (OrderedVersion.compare(version.getNormalized(), this.minVersion.getNormalized()) < 0) {
+						if (this.compareVersions(version, this.minVersion) < 0) {
 							return false;
 						}
 					}
 					if (this.maxVersion != null) {
-						if (OrderedVersion.compare(version.getNormalized(), this.maxVersion.getNormalized()) > 0) {
+						if (this.compareVersions(version, this.maxVersion) > 0) {
 							return false;
 						}
 					}
@@ -269,10 +270,26 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 				return McVersionLookup.getVersion(Collections.emptyList(), null, versionId);
 			} catch (Throwable t) {
 				MiscHelper.println("unable to parse %s Minecraft version %s - providing metadata may take longer!", kind, versionId);
-				t.printStackTrace();
-
-				return null;
 			}
+
+			return null;
+		}
+
+		private int compareVersions(McVersion version1, McVersion version2) {
+			SemanticVersion semanticVersion1 = null;
+			SemanticVersion semanticVersion2 = null;
+
+			try {
+				semanticVersion1 = SemanticVersion.parse(version1.getNormalized());
+				semanticVersion2 = SemanticVersion.parse(version2.getNormalized());
+	
+				return OrderedVersion.compare(semanticVersion1, semanticVersion2);
+			} catch (Throwable t) {
+				McVersion failedVersion = (semanticVersion1 == null) ? version1 : version2;
+				MiscHelper.println("unable to parse %s as semantic version", failedVersion.getNormalized());
+			}
+
+			return 0;
 		}
 	}
 }
