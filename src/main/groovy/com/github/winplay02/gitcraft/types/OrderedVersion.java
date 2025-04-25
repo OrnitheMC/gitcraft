@@ -193,22 +193,30 @@ public record OrderedVersion(
 
 	@Override
 	public int compareTo(OrderedVersion o) {
+		return compare(this.semanticVersion, o.semanticVersion);
+	}
+
+	public static int compare(String semanticVersion1, String semanticVersion2) {
 		SemanticVersion thisVersion = null;
 		SemanticVersion otherVersion = null;
 		try {
-			thisVersion = SemanticVersion.parse(semanticVersion());
+			thisVersion = SemanticVersion.parse(semanticVersion1);
 		} catch (VersionParsingException e) {
-			MiscHelper.panicBecause(e, "Could not parse version %s (%s) as semantic version", launcherFriendlyVersionName(), semanticVersion());
+			MiscHelper.panicBecause(e, "Could not parse version %s as semantic version", semanticVersion1);
 		}
 		try {
-			otherVersion = SemanticVersion.parse(o.semanticVersion());
+			otherVersion = SemanticVersion.parse(semanticVersion2);
 		} catch (VersionParsingException e) {
-			MiscHelper.panicBecause(e, "Could not parse version %s (%s) as semantic version", o.launcherFriendlyVersionName(), o.semanticVersion());
+			MiscHelper.panicBecause(e, "Could not parse version %s as semantic version", semanticVersion2);
 		}
-		int c = thisVersion.compareTo((Version) otherVersion);
+		return compare(thisVersion, otherVersion);
+	}
+
+	public static int compare(SemanticVersion semanticVersion1, SemanticVersion semanticVersion2) {
+		int c = semanticVersion1.compareTo((Version) semanticVersion2);
 		if (c == 0) {
-			String thisBuild = thisVersion.getBuildKey().orElse("");
-			String otherBuild = otherVersion.getBuildKey().orElse("");
+			String thisBuild = semanticVersion1.getBuildKey().orElse("");
+			String otherBuild = semanticVersion2.getBuildKey().orElse("");
 			c = thisBuild.compareTo(otherBuild);
 		}
 		return c;

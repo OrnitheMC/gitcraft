@@ -1,11 +1,14 @@
 package com.github.winplay02.gitcraft.manifest;
 
-import com.github.winplay02.gitcraft.manifest.metadata.VersionInfo;
+import com.github.winplay02.gitcraft.GitCraft;
 import com.github.winplay02.gitcraft.types.OrderedVersion;
 import com.github.winplay02.gitcraft.util.GitCraftPaths;
 import com.github.winplay02.gitcraft.util.MiscHelper;
 import com.github.winplay02.gitcraft.util.RemoteHelper;
 import com.github.winplay02.gitcraft.util.SerializationHelper;
+
+import net.fabricmc.loader.impl.game.minecraft.McVersion;
+import net.fabricmc.loader.impl.game.minecraft.McVersionLookup;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -23,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E extends VersionsManifest.VersionEntry> implements MetadataProvider {
 	protected final Path manifestMetadata;
@@ -33,6 +37,7 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 	protected final List<MetadataSources.LocalRepository> repositorySources;
 	protected final LinkedHashMap<String, OrderedVersion> versionsById = new LinkedHashMap<>();
 	protected final TreeMap<String, String> semverCache = new TreeMap<>();
+	protected final Predicate<String> versionFilter = new VersionFilter();
 	private boolean versionsLoaded;
 
 	protected BaseMetadataProvider() {
@@ -62,15 +67,10 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 		this.postLoadVersions();
 	}
 
-	/**
-	 * @return A map containing all available versions, keyed by a unique name (see {@linkplain VersionInfo#id VersionInfo.id}).
-	 */
 	@Override
-	public final Map<String, OrderedVersion> getVersions() throws IOException {
+	public final Map<String, OrderedVersion> getVersions() {
 		if (!this.versionsLoaded) {
-			this.loadVersions();
-			this.postLoadVersions();
-			this.writeSemverCache();
+			MiscHelper.panic("cannot access versions before metadata provider has been run!");
 		}
 		return Collections.unmodifiableMap(this.versionsById);
 	}
@@ -82,11 +82,8 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 			MiscHelper.println("Reading versions manifest from %s...", manifestSource.url());
 			M manifest = this.fetchVersionsManifest(manifestSource);
 			for (E versionEntry : manifest.versions()) {
-				if (!this.versionsById.containsKey(versionEntry.id())) {
-					OrderedVersion version = this.loadVersionFromManifest(versionEntry, this.manifestMetadata);
-					if (!this.shouldExclude(version)) {
-						this.versionsById.put(versionEntry.id(), version);
-					}
+				if (!this.versionsById.containsKey(versionEntry.id()) && this.shouldLoadVersion(versionEntry.id())) {
+					this.versionsById.put(versionEntry.id(), this.loadVersionFromManifest(versionEntry, this.manifestMetadata));
 				} else {
 					if (this.isExistingVersionMetadataValid(versionEntry, this.manifestMetadata)) {
 						MiscHelper.println("WARNING: Found duplicate manifest version entry: %s (Matches previous entry)", versionEntry.id());
@@ -99,11 +96,8 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 		for (MetadataSources.RemoteMetadata<E> metadataSource : this.metadataSources) {
 			MiscHelper.println("Reading extra metadata for %s...", metadataSource.versionEntry().id());
 			E versionEntry = metadataSource.versionEntry();
-			if (!this.versionsById.containsKey(versionEntry.id())) {
-				OrderedVersion version = this.loadVersionFromManifest(versionEntry, this.remoteMetadata);
-				if (!this.shouldExclude(version)) {
-					this.versionsById.put(versionEntry.id(), version);
-				}
+			if (!this.versionsById.containsKey(versionEntry.id()) && this.shouldLoadVersion(versionEntry.id())) {
+				this.versionsById.put(versionEntry.id(), this.loadVersionFromManifest(versionEntry, this.remoteMetadata));
 			} else {
 				MiscHelper.panic("Found duplicate extra version entry: %s (Differs from previous)", versionEntry.id());
 			}
@@ -112,17 +106,24 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 			MiscHelper.println("Reading extra metadata repository from %s...", repository.directory());
 			Path dir = repository.directory();
 			this.loadVersionsFromRepository(dir, mcVersion -> {
-				if (!this.shouldExclude(mcVersion)) {
-					String versionId = mcVersion.launcherFriendlyVersionName();
-					if (!this.versionsById.containsKey(versionId)) {
+				String versionId = mcVersion.launcherFriendlyVersionName();
+				if (!this.versionsById.containsKey(versionId)) {
+					if (this.shouldLoadVersion(versionId)) {
 						this.versionsById.put(versionId, mcVersion);
-					} else {
-						MiscHelper.panic("Found duplicate repository version entry: %s", versionId);
 					}
+				} else {
+					MiscHelper.panic("Found duplicate repository version entry: %s", versionId);
 				}
 			});
 		}
 		this.versionsLoaded = true;
+	}
+
+	/**
+	 * @return whether this Minecraft version should be loaded or not
+	 */
+	protected boolean shouldLoadVersion(String versionId) {
+		return this.versionFilter.test(versionId);
 	}
 
 	protected void postLoadVersions() {
@@ -199,21 +200,79 @@ public abstract class BaseMetadataProvider<M extends VersionsManifest<E>, E exte
 
 	@Override
 	public final OrderedVersion getVersionByVersionID(String versionId) {
-		try {
-			return this.getVersions().get(versionId);
-		} catch (Exception e) {
-			MiscHelper.panicBecause(e, "Could not fetch version information by id '%s'", versionId);
-			return null;
-		}
-	}
-
-	@Override
-	public boolean shouldExclude(OrderedVersion mcVersion) {
-		return false;
+		return this.getVersions().get(versionId);
 	}
 
 	@Override
 	public boolean shouldExcludeFromMainBranch(OrderedVersion mcVersion) {
 		return mcVersion.isPending();
+	}
+
+	private static class VersionFilter implements Predicate<String> {
+
+		private String[] onlyVersions = null;
+		private String[] excludedVersions = null;
+		private McVersion minVersion = null;
+		private McVersion maxVersion = null;
+
+		VersionFilter() {
+			if (GitCraft.config.isOnlyVersion()) {
+				this.onlyVersions = GitCraft.config.onlyVersion;
+			}
+			if (GitCraft.config.isAnyVersionExcluded()) {
+				this.excludedVersions = GitCraft.config.excludedVersion;
+			}
+			if (GitCraft.config.isMinVersion()) {
+				this.minVersion = this.findVersion(GitCraft.config.minVersion, "minimum");
+			}
+			if (GitCraft.config.isMaxVersion()) {
+				this.maxVersion = this.findVersion(GitCraft.config.maxVersion, "maximum");
+			}
+		}
+
+		@Override
+		public boolean test(String versionId) {
+			if (this.onlyVersions != null) {
+				for (String onlyVersion : this.onlyVersions) {
+					if (versionId.equals(onlyVersion)) {
+						return true;
+					}
+				}
+			}
+			if (this.excludedVersions != null) {
+				for (String excludedVersion : this.excludedVersions) {
+					if (versionId.equals(excludedVersion)) {
+						return false;
+					}
+				}
+			}
+			if (this.minVersion != null || this.maxVersion != null) {
+				McVersion version = this.findVersion(versionId, "provided");
+				if (version != null) {
+					if (this.minVersion != null) {
+						if (OrderedVersion.compare(version.getNormalized(), this.minVersion.getNormalized()) < 0) {
+							return false;
+						}
+					}
+					if (this.maxVersion != null) {
+						if (OrderedVersion.compare(version.getNormalized(), this.maxVersion.getNormalized()) > 0) {
+							return false;
+						}
+					}
+				}
+			}
+			return true;
+		}
+
+		private McVersion findVersion(String versionId, String kind) {
+			try {
+				return McVersionLookup.getVersion(Collections.emptyList(), null, versionId);
+			} catch (Throwable t) {
+				MiscHelper.println("unable to parse %s Minecraft version %s - providing metadata may take longer!", kind, versionId);
+				t.printStackTrace();
+
+				return null;
+			}
+		}
 	}
 }

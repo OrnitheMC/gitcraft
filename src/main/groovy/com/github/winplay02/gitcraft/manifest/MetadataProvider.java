@@ -24,9 +24,14 @@ public interface MetadataProvider {
 	String getInternalName();
 
 	/**
+	 * Fetch all the metadata files for all relevant Minecraft versions.
+	 */
+	void provide() throws IOException;
+
+	/**
 	 * @return A map containing all available versions, keyed by a unique name (see {@linkplain VersionInfo#id VersionInfo.id}).
 	 */
-	Map<String, OrderedVersion> getVersions() throws IOException;
+	Map<String, OrderedVersion> getVersions();
 
 	/**
 	 * Finds parent nodes to the provided version. Used to construct the {@link com.github.winplay02.gitcraft.MinecraftVersionGraph}.
@@ -37,11 +42,6 @@ public interface MetadataProvider {
 	List<String> getParentVersion(OrderedVersion mcVersion);
 
 	OrderedVersion getVersionByVersionID(String versionId);
-
-	/**
-	 * @return whether this Minecraft version should be excluded from the version graph
-	 */
-	boolean shouldExclude(OrderedVersion mcVersion);
 
 	/**
 	 * @return whether this Minecraft version should <i>definitely</i> not appear in a main branch of the version graph

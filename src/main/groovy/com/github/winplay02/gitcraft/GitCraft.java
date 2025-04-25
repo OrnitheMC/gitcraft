@@ -38,6 +38,7 @@ public class GitCraft {
 			}
 		}, "Shutdown-Hook-Maven-Cache-Saver"));
 		// Create Graph
+		GitCraft.config.manifestSource.getMetadataProvider().provide();
 		GitCraft.versionGraph = MinecraftVersionGraph.createFromMetadata(GitCraft.config.manifestSource.getMetadataProvider());
 		RemoteHelper.saveMavenCache();
 		MiscHelper.println("Decompiler log output is suppressed!");

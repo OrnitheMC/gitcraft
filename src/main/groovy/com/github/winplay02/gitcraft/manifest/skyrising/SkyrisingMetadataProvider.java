@@ -48,6 +48,12 @@ public class SkyrisingMetadataProvider extends BaseMetadataProvider<SkyrisingMan
 	}
 
 	@Override
+	public boolean shouldLoadVersion(String versionId) {
+		// classic and alpha servers don't work well with the version graph right now
+		return !versionId.startsWith("server-") && super.shouldLoadVersion(versionId);
+	}
+
+	@Override
 	protected void postLoadVersions() {
 		this.versionDetails.keySet().removeIf(version -> this.getVersionByVersionID(version) == null);
 	}
@@ -112,12 +118,6 @@ public class SkyrisingMetadataProvider extends BaseMetadataProvider<SkyrisingMan
 	}
 
 	private static final Pattern NORMAL_SNAPSHOT_PATTERN = Pattern.compile("(^\\d\\dw\\d\\d[a-z](-\\d+)?$)|(^\\d.\\d+(.\\d+)?(-(pre|rc)((-\\d+|\\d+)(-\\d+)?)?|_[a-z_\\-]+snapshot-\\d+| Pre-Release \\d+)?$)");
-
-	@Override
-	public boolean shouldExclude(OrderedVersion mcVersion) {
-		// classic and alpha servers don't work well with the version graph right now
-		return mcVersion.launcherFriendlyVersionName().startsWith("server-");
-	}
 
 	@Override
 	public boolean shouldExcludeFromMainBranch(OrderedVersion mcVersion) {
